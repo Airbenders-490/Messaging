@@ -21,7 +21,7 @@ func Start() {
 	log.Printf("Connected Cassandra database OK")
 
 	chatRepository := repository.NewChatRepository(session)
-	chatRepository.GetByFromAndToID("40025120", "400000") // example, can remove
+	chatRepository.PrintAllByFromAndToID("40025120", "400000") // example, can remove
 
 	// TODO: add middleware for authentication
 	// TODO: map URLs & add router
