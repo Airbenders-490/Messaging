@@ -14,6 +14,5 @@ type Chat struct {
 
 // ChatRepository interface defines the functions all chatRepositories should have
 type ChatRepository interface {
-	GetOldestByFromAndToID(toStudentID string, fromStudentID string) (*Chat, error)
-	PrintAllByFromAndToID(toStudentID string, fromStudentID string) error
+
 }
