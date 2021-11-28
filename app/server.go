@@ -2,15 +2,20 @@ package app
 
 import (
 	"chat/repository"
+	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
 	"log"
 	"os"
 )
 
 
+func server() *gin.Engine {
+	router := gin.Default()
+	return router
+}
+
 // Start runs the server
 func Start() {
-
 	cluster := gocql.NewCluster(os.Getenv("CASSANDRA_HOST"))
 	cluster.Keyspace = os.Getenv("CASSANDRA_CHAT_KEYSPACE")
 
@@ -21,4 +26,5 @@ func Start() {
 	log.Printf("Connected Cassandra database OK")
 
 	repository.NewChatRepository(session)
+
 }
