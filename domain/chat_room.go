@@ -4,16 +4,16 @@ import "context"
 
 // ChatRoom struct
 type ChatRoom struct {
-	RoomID string
-	Name string
-	Admin Student
+	RoomID   string
+	Name     string
+	Admin    Student
 	Students []Student
 }
 
 // StudentChatRooms struct
 type StudentChatRooms struct {
 	Student Student
-	Rooms []ChatRoom
+	Rooms   []ChatRoom
 }
 
 // RoomRepository interface implements the contract as descirbed aboved each method
@@ -41,5 +41,3 @@ type RoomUseCase interface {
 	// DeleteRoom Ensure the user deleting is the admin
 	DeleteRoom(ctx context.Context, userID string, roomID string) error
 }
-
-

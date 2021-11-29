@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gocql/gocql v0.0.0-20211015133455-b225f9b53fa1
+	github.com/gorilla/websocket v1.4.2
 	github.com/joho/godotenv v1.4.0
 )
 
