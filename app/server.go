@@ -1,16 +1,19 @@
 package app
 
 import (
-	"chat/repository"
+	"chat/messaging/delivery/http"
+	"chat/messaging/repository"
+	"chat/messaging/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
 	"log"
 	"os"
+	"time"
 )
 
-
-func server() *gin.Engine {
+func Server(messageHandler *http.MessageHandler) *gin.Engine {
 	router := gin.Default()
+	mapUrls(router, messageHandler)
 	return router
 }
 
@@ -20,11 +23,16 @@ func Start() {
 	cluster.Keyspace = os.Getenv("CASSANDRA_CHAT_KEYSPACE")
 
 	session, err := cluster.CreateSession()
-	if  err != nil {
+	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Printf("Connected Cassandra database OK")
 
-	repository.NewChatRepository(session)
-
+	mr := repository.NewChatRepository(session)
+	rr := repository.NewRoomRepo()
+	u := usecase.NewMessageUseCase(time.Second*2, mr, rr)
+	messageHandler := http.NewMessageHandler(u)
+	go http.MainHub.StartHubListener()
+	router := Server(messageHandler)
+	router.Run()
 }
