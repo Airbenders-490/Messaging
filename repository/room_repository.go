@@ -41,6 +41,9 @@ type RoomRepository struct {
 }
 const (
 	SaveRoom = `INSERT INTO chat.room (roomID, NAME, Admin, students) VALUES ($1, $2, $3, $4);`
+	GetRoom = `SELECT * FROM chat.room WHERE roomID=$1  ;`
+	GetRoomFor = `SELECT * FROM chat.student_rooms WHERE student=$1  ;`
+	editChatroomParticipant = `UPDATE chat.room SET Students=$2 WHERE RoomID=$1;`
 )
 
 
@@ -63,18 +66,67 @@ func (r RoomRepository) SaveRoom(ctx context.Context, room *domain.ChatRoom) err
 }
 
 func (r RoomRepository) GetRoom(ctx context.Context, roomID string) (*domain.ChatRoom, error) {
-	panic("implement me")
+	var room *domain.ChatRoom
+	var studentText  []string
+	var Allstudent []domain.Student
+
+	err := r.dbSession.Query(GetRoom, roomID).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin, &room.Name, &studentText);
+	if err!=nil {
+		return nil,err ;
+	}
+	for _,ID := range studentText{
+		var student *domain.Student
+		student.ID=ID
+		Allstudent = append(Allstudent,*student )
+
+	}
+	room.Students=Allstudent
+
+
+
+	fmt.Println("Message entry: ", room.RoomID, room.Admin,room.Name)
+
+	return room,err
+
 }
 
+
 func (r RoomRepository) GetRoomsFor(ctx context.Context, studentID string) (*domain.StudentChatRooms, error) {
-	panic("implement me")
+	var stuentRoom *domain.StudentChatRooms
+	var roomsID []string
+	var rooms []domain.ChatRoom
+	err := r.dbSession.Query(GetRoomFor, studentID).Consistency(gocql.One).Scan(&stuentRoom.Student, &roomsID);
+	if err!=nil {
+		return nil,err ;
+	}
+	for _,ID := range roomsID{
+		var room *domain.ChatRoom
+		room.RoomID=ID
+		rooms = append(rooms,*room )
+
+	}
+	stuentRoom.Rooms=rooms
+return stuentRoom , err
 }
 
 func (r RoomRepository) EditChatRoomParticipants(ctx context.Context, roomID string, student []domain.Student) error {
-	panic("implement me")
+var studentID []string
+
+	for _,s := range student{
+
+		studentID = append(studentID,s.ID )
+
+	}
+	err := r.dbSession.Query(editChatroomParticipant, roomID, studentID).Consistency(gocql.One);
+	if err!=nil {
+		log.Println("unable to get the school name")
+	}
+
+	return  nil
 }
 
-func (r RoomRepository) AddRoomForParticipants(ctx context.Context, roomID string, student []domain.Student) error {
+func (r RoomRepository) AddRoomForParticipants(ctx context.Context, roomID string, student []domain.StudentChatRooms) error {
+
 	panic("implement me")
 }
 
@@ -86,11 +138,8 @@ func (r RoomRepository) DeleteRoom(ctx context.Context, roomID string) error {
 	panic("implement me")
 }
 
-func NewRoomRepository(session *gocql.Session) domain.RoomRepository {
-	return &RoomRepository{
-		dbSession: session,
-	}
-}
+
+
 
 
 
