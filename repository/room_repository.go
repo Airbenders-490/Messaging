@@ -2,7 +2,6 @@ package repository
 
 import (
 	"chat/domain"
-	"context"
 	"fmt"
 	"github.com/gocql/gocql"
 	"log"
@@ -39,20 +38,32 @@ type RoomRepository interface {
 type RoomRepository struct {
 	dbSession *gocql.Session
 }
+
+func NewRoomRepository(session *gocql.Session) *RoomRepository  {
+	return &RoomRepository{
+		dbSession: session,
+	}
+}
 const (
-	SaveRoom = `INSERT INTO chat.room (roomID, NAME, Admin, students) VALUES ($1, $2, $3, $4);`
-	GetRoom = `SELECT * FROM chat.room WHERE roomID=$1  ;`
-	GetRoomFor = `SELECT * FROM chat.student_rooms WHERE student=$1  ;`
-	editChatroomParticipant = `UPDATE chat.room SET Students=$2 WHERE RoomID=$1;`
+	SaveRoom = `INSERT INTO chat.room (roomID, NAME, Admin, students) VALUES (?, ?, ?,?);`
+	GetRoom = `SELECT * FROM chat.room WHERE roomID=? LIMIT 1;`
+	GetRoomFor = `SELECT * FROM chat.student_rooms WHERE student=? LIMIT 1 ;`
+	editChatroomParticipant = `UPDATE chat.room  SET Students=? WHERE RoomID=?;`
+
+	addRoomForParticipant = `UPDATE chat.student_rooms  SET rooms = rooms +? WHERE student=? ;`
+	CreateStudentRooms=`INSERT INTO chat.student_rooms (student) VALUES (?);`
+	RemoveRoomForParticipant = `UPDATE chat.student_rooms  SET rooms = rooms-? WHERE student=? ;`
+
 )
 
 
-func (r RoomRepository) SaveRoom(ctx context.Context, room *domain.ChatRoom) error {
+func (r RoomRepository) SaveRoom( room *domain.ChatRoom) error {
 	var students []string
 	for _, element := range room.Students{
 		students = append(students, element.ID)
 	}
-	 err := r.dbSession.Query(SaveRoom, room.RoomID, room.Admin,room.Name,students).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin, &room.Name, &students);
+
+	 err := r.dbSession.Query(SaveRoom, room.RoomID, room.Admin.ID,room.Name,students).Consistency(gocql.One).Exec();
 
 	if err!=nil {
 		log.Fatal(err)
@@ -65,51 +76,39 @@ func (r RoomRepository) SaveRoom(ctx context.Context, room *domain.ChatRoom) err
 
 }
 
-func (r RoomRepository) GetRoom(ctx context.Context, roomID string) (*domain.ChatRoom, error) {
-	var room *domain.ChatRoom
+
+func (r RoomRepository) GetRoom( roomID string) (*domain.ChatRoom, error) {
+	var room domain.ChatRoom
+
 	var studentText  []string
-	var Allstudent []domain.Student
+	var AllStudent []domain.Student
 
-	err := r.dbSession.Query(GetRoom, roomID).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin, &room.Name, &studentText);
+	err := r.dbSession.Query(GetRoom, roomID).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin.ID,&room.Deleted, &room.Name, &studentText);
+
+
 	if err!=nil {
+		log.Fatal(err)
 		return nil,err ;
 	}
+
 	for _,ID := range studentText{
-		var student *domain.Student
+		var student domain.Student
 		student.ID=ID
-		Allstudent = append(Allstudent,*student )
+		AllStudent = append(AllStudent,student )
 
 	}
-	room.Students=Allstudent
+	room.Students= AllStudent
 
 
 
-	fmt.Println("Message entry: ", room.RoomID, room.Admin,room.Name)
 
-	return room,err
+
+	return &room,err
 
 }
 
 
-func (r RoomRepository) GetRoomsFor(ctx context.Context, studentID string) (*domain.StudentChatRooms, error) {
-	var stuentRoom *domain.StudentChatRooms
-	var roomsID []string
-	var rooms []domain.ChatRoom
-	err := r.dbSession.Query(GetRoomFor, studentID).Consistency(gocql.One).Scan(&stuentRoom.Student, &roomsID);
-	if err!=nil {
-		return nil,err ;
-	}
-	for _,ID := range roomsID{
-		var room *domain.ChatRoom
-		room.RoomID=ID
-		rooms = append(rooms,*room )
-
-	}
-	stuentRoom.Rooms=rooms
-return stuentRoom , err
-}
-
-func (r RoomRepository) EditChatRoomParticipants(ctx context.Context, roomID string, student []domain.Student) error {
+func (r RoomRepository) EditChatRoomParticipants( roomID string, student []domain.Student) error {
 var studentID []string
 
 	for _,s := range student{
@@ -117,26 +116,92 @@ var studentID []string
 		studentID = append(studentID,s.ID )
 
 	}
-	err := r.dbSession.Query(editChatroomParticipant, roomID, studentID).Consistency(gocql.One);
+	err := r.dbSession.Query(editChatroomParticipant, studentID, roomID).Consistency(gocql.One).Exec();
 	if err!=nil {
-		log.Println("unable to get the school name")
+		log.Fatal(err)
+		return err ;
 	}
 
 	return  nil
 }
 
-func (r RoomRepository) AddRoomForParticipants(ctx context.Context, roomID string, student []domain.StudentChatRooms) error {
+func (r RoomRepository) GetRoomsFor( studentID string) (*domain.StudentChatRooms, error) {
+	var StudentRoom domain.StudentChatRooms
+	var roomsID []string
+	var rooms []domain.ChatRoom
+	err := r.dbSession.Query(GetRoomFor, studentID).Consistency(gocql.One).Scan(&StudentRoom.Student.ID, &roomsID);
+	if err!=nil {
+		log.Fatal(err)
+		return nil,err ;
+	}
+	for _,ID := range roomsID{
+		var room domain.ChatRoom
+		room.RoomID=ID
+		rooms = append(rooms,room )
 
-	panic("implement me")
+	}
+	StudentRoom.Rooms=rooms
+
+	return &StudentRoom , err
 }
 
-func (r RoomRepository) RemoveRoomForParticipants(ctx context.Context, roomID string, student []domain.Student) error {
-	panic("implement me")
+
+
+func (r RoomRepository) AddRoomForParticipants( roomID string, students []domain.Student) error {
+	var rooms []string
+	rooms=append(rooms,roomID)
+
+	for _,student:= range students {
+
+		err := r.dbSession.Query(addRoomForParticipant, rooms,student.ID).Consistency(gocql.One).Exec();
+		if err!=nil {
+			log.Fatal(err)
+			return err ;
+		}
+	}
+
+	return  nil
+
 }
 
-func (r RoomRepository) DeleteRoom(ctx context.Context, roomID string) error {
-	panic("implement me")
+func (r RoomRepository) CreateStudentRooms( studnet domain.Student) error {
+
+
+
+		err := r.dbSession.Query(CreateStudentRooms, studnet.ID).Consistency(gocql.One).Exec();
+		if err!=nil {
+			log.Fatal(err)
+			return err ;
+		}
+
+
+	return  nil
+
 }
+
+
+
+func (r RoomRepository) RemoveRoomForParticipants( roomID string, students []domain.Student) error {
+	var rooms []string
+	rooms=append(rooms, roomID)
+	for _,student:= range students {
+
+		err := r.dbSession.Query(RemoveRoomForParticipant, rooms,student.ID).Exec();
+		if err!=nil {
+			log.Fatal(err)
+			return err ;
+		}
+
+	}
+
+	return  nil
+
+}
+
+func (r RoomRepository) DeleteRoom( roomID string) error {
+panic("implement me")
+}
+
 
 
 

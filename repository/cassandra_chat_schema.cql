@@ -10,8 +10,12 @@ CREATE TABLE IF NOT EXISTS chat.messages (
     PRIMARY KEY ( (room_id), sent_timestamp )
 ) WITH CLUSTERING ORDER BY (sent_timestamp DESC);
 
+
+
 CREATE TABLE IF NOT EXISTS  chat.room (
-     room_id text PRIMARY KEY,
+     roomid text PRIMARY KEY,
+     Name text,
+     Admin text,
      students set<text>,
      deleted timestamp
 );
