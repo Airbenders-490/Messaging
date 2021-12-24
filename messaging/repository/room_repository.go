@@ -39,7 +39,7 @@ type RoomRepository struct {
 	dbSession *gocql.Session
 }
 
-func NewRoomRepository(session *gocql.Session) *RoomRepository  {
+func NewRoomRepository(session *gocql.Session) *RoomRepository {
 	return &RoomRepository{
 		dbSession: session,
 	}

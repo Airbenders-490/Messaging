@@ -15,12 +15,12 @@ type roomUseCase struct {
 func (u *roomUseCase) SaveRoom(ctx context.Context, room *domain.ChatRoom) error {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
-	err := u.rr.SaveRoom(ctx , room )
+	err := u.rr.SaveRoom( room )
 	if err!=nil {
 		return err
 	}
 
-	anyExistingRoom, err := u.rr.GetRoom(ctx , room.RoomID )
+	anyExistingRoom, err := u.rr.GetRoom( room.RoomID )
 	if anyExistingRoom != nil {
 		return errors.NewBadRequestError("the room already exist")
 	}
