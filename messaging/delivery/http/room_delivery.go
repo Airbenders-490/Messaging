@@ -18,11 +18,7 @@ func NewRoomHandler(ru domain.RoomUseCase) *RoomHandler {
 	return &RoomHandler{u: ru}
 }
 
-// GetAllTags returns all the tags currently available
 func (h *RoomHandler) SaveRoom(c *gin.Context) {
-
-
-
 	var room domain.ChatRoom
 	err := c.ShouldBindJSON(&room)
 	if err != nil {
@@ -31,8 +27,8 @@ func (h *RoomHandler) SaveRoom(c *gin.Context) {
 	}
 
 
-	ctx := c.Request.Context()
-	err = h.u.SaveRoom(ctx ,&room )
+	//ctx := c.Request.Context()
+	err = h.u.SaveRoom(&room )
 	if err != nil {
 		switch v := err.(type) {
 		case *errors.RestError:

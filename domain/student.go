@@ -11,8 +11,8 @@ type Student struct {
 
 // StudentRepository implements the contract for student repository. We only save and get a student here
 type StudentRepository interface {
-	SaveStudent(ctx context.Context, student *Student) error
-	GetStudent(ctx context.Context, studentID string) (*Student, error)
+	SaveStudent( student *Student) error
+	GetStudent( studentID string) (*Student, error)
 }
 
 // StudentUseCase implements the contract for student functionalities. GetStudent is used by the app, but

@@ -18,10 +18,10 @@ func NewMessageUseCase(t time.Duration, mr domain.MessageRepository, rr domain.R
 }
 
 func (u *messageUseCase) IsAuthorized(userID, roomID string) (authorized bool) {
-	ctx, cancel := context.WithTimeout(context.Background(), u.timeout)
+	_, cancel := context.WithTimeout(context.Background(), u.timeout)
 	defer cancel()
 
-	studentChatRooms, err := u.roomRepository.GetRoomsFor(ctx, userID)
+	studentChatRooms, err := u.roomRepository.GetRoomsFor( userID)
 	if err != nil {
 		return false
 	}

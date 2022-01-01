@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"context"
 	"time"
 )
 
@@ -37,13 +36,13 @@ type RoomRepository interface {
 // RoomUseCase interface implements the contract as described above each method
 type RoomUseCase interface {
 	// SaveRoom needs to save not just the room, but also add the chatroom for all the students
-	SaveRoom(ctx context.Context, room *ChatRoom) error
-	GetChatRoomsFor(ctx context.Context, studentID string) (*StudentChatRooms, error)
+	SaveRoom( room *ChatRoom) error
+	GetStudentChatRoomsFor( studentID string) (*StudentChatRooms, error)
 	// EditChatRoomParticipants this deals with not only changing the participants in the chat.rooms table, but also
 	// manipulating the chat.student_rooms table to ensure updated room list
-	EditChatRoomParticipants(ctx context.Context, room *ChatRoom) error
+	EditChatRoomParticipants( room *ChatRoom) error
 	// DeleteRoom Ensure the user deleting is the admin
-	DeleteRoom(ctx context.Context, userID string, roomID string) error
+	DeleteRoom( userID string, roomID string) error
 }
 
 

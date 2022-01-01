@@ -53,6 +53,7 @@ const (
 	addRoomForParticipant = `UPDATE chat.student_rooms  SET rooms = rooms +? WHERE student=? ;`
 	CreateStudentRooms=`INSERT INTO chat.student_rooms (student) VALUES (?);`
 	RemoveRoomForParticipant = `UPDATE chat.student_rooms  SET rooms = rooms-? WHERE student=? ;`
+	DeleteRoom = `DELETE FROM chat.room   WHERE roomID=? ;`
 
 )
 
@@ -199,7 +200,13 @@ func (r RoomRepository) RemoveRoomForParticipants( roomID string, students []dom
 }
 
 func (r RoomRepository) DeleteRoom( roomID string) error {
-panic("implement me")
+	err := r.dbSession.Query(DeleteRoom, roomID).Exec();
+	if err!=nil {
+		log.Fatal(err)
+		return err ;
+	}
+
+	return nil
 }
 
 
