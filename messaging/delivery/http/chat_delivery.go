@@ -4,12 +4,22 @@ import (
 	"chat/domain"
 	"context"
 	"encoding/json"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 )
+
+const issuer string = "iss"
+const roomID string = "roomID"
+
+// SecretKey for jwt encoding
+var SecretKey = os.Getenv("SECRET_KEY")
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -120,7 +130,7 @@ func (h *MessageHandler) ServeWs(w http.ResponseWriter, r *http.Request, roomID 
 	authorized := h.u.IsAuthorized(userID, roomID)
 	if !authorized {
 		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, "Not authorized to enter the room number "+roomID)
+		io.WriteString(w, "Not authorized to enter the roomID "+ roomID)
 		return
 	}
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -188,4 +198,40 @@ type MessageHandler struct {
 // NewMessageHandler instantiates and returns a new MessageHandler
 func NewMessageHandler(u domain.MessageUseCase) *MessageHandler {
 	return &MessageHandler{u: u}
+}
+
+func (h *MessageHandler) JoinChatRoom (c *gin.Context) {
+
+	jwtTokenString := strings.Join(c.Request.Header["Authorization"], "")
+
+	if jwtTokenString == "" || jwtTokenString[:7] != "Bearer " {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthenticated User or invalid header"})
+		return
+	}
+
+	jwtTokenString = strings.Replace(jwtTokenString, "Bearer ", "", 1)
+	userID := extractUserUUIDFrom(jwtTokenString)
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthenticated User cannot join chat room"})
+		return
+	}
+
+	roomID := c.Param(roomID)
+	h.ServeWs(c.Writer, c.Request, roomID, userID)
+}
+
+func extractUserUUIDFrom(jwtTokenStr string) (userUUID string) {
+
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(jwtTokenStr, &claims, func(token *jwt.Token) (interface{}, error) {
+			return []byte(SecretKey), nil
+	})
+
+	// if user was not logged in
+		if err != nil {
+		return ""
+	}
+
+	return claims[issuer].(string)
 }

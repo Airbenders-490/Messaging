@@ -18,17 +18,15 @@ func NewMessageUseCase(t time.Duration, mr domain.MessageRepository, rr domain.R
 }
 
 func (u *messageUseCase) IsAuthorized(userID, roomID string) (authorized bool) {
+	authorized = false
 	_, cancel := context.WithTimeout(context.Background(), u.timeout)
 	defer cancel()
 
 	studentChatRooms, err := u.roomRepository.GetRoomsFor( userID)
 	if err != nil {
-		return false
+		return authorized
 	}
 
-	// todo: this is temporary. Must be removed!
-	authorized = true
-	return
 	for _, room := range studentChatRooms.Rooms {
 		if roomID == room.RoomID {
 			authorized = true
