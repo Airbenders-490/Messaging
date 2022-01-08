@@ -2,12 +2,15 @@ package http
 
 import (
 	"chat/domain"
+	"chat/utils/errors"
 	"context"
 	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -188,4 +191,45 @@ type MessageHandler struct {
 // NewMessageHandler instantiates and returns a new MessageHandler
 func NewMessageHandler(u domain.MessageUseCase) *MessageHandler {
 	return &MessageHandler{u: u}
+}
+
+func (h *MessageHandler) LoadMessages(c *gin.Context){
+	room := c.Param("roomID")
+	queryLimit := c.Query("limit")
+	timestamp := c.Query("time")
+	var limit int
+	var sentTimestamp time.Time
+
+	test, err := strconv.ParseInt(queryLimit, 10, 64)
+	if err != nil || test < 1{
+		limit = 10
+	}else {
+		limit = int(test)
+	}
+
+	layout := "2006-01-02 15:04:05.000"
+	temp, err := time.Parse(layout, timestamp)
+	if err != nil {
+		sentTimestamp = time.Now()
+	} else {
+		sentTimestamp = temp
+	}
+
+	if room == "" {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Must provide room id"))
+		return
+	}
+
+	ctx := c.Request.Context()
+	//message := domain.Message{RoomID: room, SentTimestamp: sentTimestamp, FromStudentID: userID, MessageBody: string(msg)}
+	//msgs, err := h.u.EditMessage(ctx, room, sentTimestamp, limit)
+
+	msgs, err := h.u.GetMessages(ctx, room, sentTimestamp, limit)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errors.NewInternalServerError(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, msgs)
 }
