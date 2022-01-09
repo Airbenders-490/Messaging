@@ -109,7 +109,7 @@ func (r RoomRepository) GetRoom( roomID string) (*domain.ChatRoom, error) {
 
 
 func (r RoomRepository) EditChatRoomParticipants( roomID string, student []domain.Student) error {
-var studentID []string
+	var studentID []string
 
 	for _,s := range student{
 
