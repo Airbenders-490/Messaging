@@ -67,7 +67,7 @@ func (r RoomRepository) SaveRoom( room *domain.ChatRoom) error {
 	 err := r.dbSession.Query(SaveRoom, room.RoomID, room.Admin.ID,room.Name,students).Consistency(gocql.One).Exec();
 
 	if err!=nil {
-		log.Fatal(err)
+	return err ;
 	}
 
 
@@ -88,7 +88,6 @@ func (r RoomRepository) GetRoom( roomID string) (*domain.ChatRoom, error) {
 
 
 	if err!=nil {
-		log.Fatal(err)
 		return nil,err ;
 	}
 
@@ -119,7 +118,6 @@ var studentID []string
 	}
 	err := r.dbSession.Query(editChatroomParticipant, studentID, roomID).Consistency(gocql.One).Exec();
 	if err!=nil {
-		log.Fatal(err)
 		return err ;
 	}
 
@@ -132,7 +130,6 @@ func (r RoomRepository) GetRoomsFor( studentID string) (*domain.StudentChatRooms
 	var rooms []domain.ChatRoom
 	err := r.dbSession.Query(GetRoomFor, studentID).Consistency(gocql.One).Scan(&StudentRoom.Student.ID, &roomsID);
 	if err!=nil {
-		log.Fatal(err)
 		return nil,err ;
 	}
 	for _,ID := range roomsID{
@@ -156,7 +153,6 @@ func (r RoomRepository) AddRoomForParticipants( roomID string, students []domain
 
 		err := r.dbSession.Query(addRoomForParticipant, rooms,student.ID).Consistency(gocql.One).Exec();
 		if err!=nil {
-			log.Fatal(err)
 			return err ;
 		}
 	}
@@ -171,7 +167,6 @@ func (r RoomRepository) CreateStudentRooms( studnet domain.Student) error {
 
 		err := r.dbSession.Query(CreateStudentRooms, studnet.ID).Consistency(gocql.One).Exec();
 		if err!=nil {
-			log.Fatal(err)
 			return err ;
 		}
 
@@ -189,7 +184,6 @@ func (r RoomRepository) RemoveRoomForParticipants( roomID string, students []dom
 
 		err := r.dbSession.Query(RemoveRoomForParticipant, rooms,student.ID).Exec();
 		if err!=nil {
-			log.Fatal(err)
 			return err ;
 		}
 
@@ -202,7 +196,6 @@ func (r RoomRepository) RemoveRoomForParticipants( roomID string, students []dom
 func (r RoomRepository) DeleteRoom( roomID string) error {
 	err := r.dbSession.Query(DeleteRoom, roomID).Exec();
 	if err!=nil {
-		log.Fatal(err)
 		return err ;
 	}
 
