@@ -29,7 +29,7 @@ func Start() {
 	log.Printf("Connected Cassandra database OK")
 
 	mr := repository.NewChatRepository(session)
-	rr := repository.NewRoomRepo()
+	rr := repository.NewRoomRepository(session)
 	u := usecase.NewMessageUseCase(time.Second*2, mr, rr)
 	messageHandler := http.NewMessageHandler(u)
 	go http.MainHub.StartHubListener()
