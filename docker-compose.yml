@@ -1,0 +1,34 @@
+version: '3.7'
+
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    volumes:
+      - .:/chat
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - "MAX_HEAP_SIZE=256M"
+      - "HEAP_NEWSIZE=128M"
+    restart: always
+    volumes:
+      - ./out/cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-u cassandra", "-p cassandra" ,"-e describe keyspaces"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  cassandra-load-keyspace:
+    container_name: cassandra-load-keyspace
+    image: cassandra:latest
+    depends_on:
+      - cassandra
+    volumes:
+      - ./repository/cassandra_chat_schema.cql:/schema.cql
+    command: /bin/bash -c "sleep 60 && echo loading cassandra keyspace && cqlsh cassandra -f /schema.cql"
