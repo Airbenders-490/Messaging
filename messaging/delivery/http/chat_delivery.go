@@ -6,6 +6,7 @@ import (
 	"chat/utils/httputils"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"io"
@@ -161,6 +162,7 @@ func (h *MessageHandler) ServeWs(w http.ResponseWriter, r *http.Request, roomID 
 		io.WriteString(w, "Not authorized to enter the room number "+roomID)
 		return
 	}
+	fmt.Println("helloooo")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err.Error())
