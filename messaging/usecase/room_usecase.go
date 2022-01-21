@@ -120,7 +120,7 @@ func (u *roomUseCase) GetChatRoomsFor(studentID string) (*domain.StudentChatRoom
 func (u *roomUseCase) DeleteRoom( userID string, roomID string) error {
 	room,err := u.rr.GetRoom(roomID)
 	if err!=nil {
-		return errors.NewConflictError(fmt.Sprintf("Room with ID %s already exists", roomID))
+		return errors.NewConflictError(fmt.Sprintf("Room with ID %s does NOT exist", roomID))
 	}
 
 	if room.Admin.ID != userID {

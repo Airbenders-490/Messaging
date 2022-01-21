@@ -29,14 +29,8 @@ func (h *RoomHandler) SaveRoom(c *gin.Context) {
 	//ctx := c.Request.Context()
 	err = h.u.SaveRoom(&room)
 	if err != nil {
-		switch v := err.(type) {
-			case *errors.RestError:
-				c.JSON(v.Code, v)
-				return
-			default:
-				c.JSON(http.StatusInternalServerError, errors.NewInternalServerError(err.Error()))
-				return
-		}
+		setRESTError(err, c)
+		return
 	}
 
 	c.JSON(http.StatusCreated, httputils.NewResponse("Room created"))
@@ -52,14 +46,8 @@ func (h *RoomHandler) AddUserToRoom(c *gin.Context) {
 
 	err := h.u.AddUserToRoom(roomID, userID)
 	if err != nil {
-		switch v := err.(type) {
-		case *errors.RestError:
-			c.JSON(v.Code, v)
-			return
-		default:
-			c.JSON(http.StatusInternalServerError, errors.NewInternalServerError(err.Error()))
-			return
-		}
+		setRESTError(err, c)
+		return
 	}
 
 	c.JSON(http.StatusCreated, httputils.NewResponse("User added to Room"))
@@ -75,14 +63,8 @@ func (h *RoomHandler) RemoveUserFromRoom(c *gin.Context) {
 
 	err := h.u.RemoveUserFromRoom(roomID, userID)
 	if err != nil {
-		switch v := err.(type) {
-		case *errors.RestError:
-			c.JSON(v.Code, v)
-			return
-		default:
-			c.JSON(http.StatusInternalServerError, errors.NewInternalServerError(err.Error()))
-			return
-		}
+		setRESTError(err, c)
+		return
 	}
 
 	c.JSON(http.StatusCreated, httputils.NewResponse("User Removed from Room"))
@@ -97,14 +79,8 @@ func (h *RoomHandler) GetChatRoomsFor(c *gin.Context) {
 
 	studentChatRooms, err := h.u.GetChatRoomsFor(userID)
 	if err != nil {
-		switch v := err.(type) {
-		case *errors.RestError:
-			c.JSON(v.Code, v)
-			return
-		default:
-			c.JSON(http.StatusInternalServerError, errors.NewInternalServerError(err.Error()))
-			return
-		}
+		setRESTError(err, c)
+		return
 	}
 
 	c.JSON(http.StatusCreated, studentChatRooms)
@@ -120,15 +96,18 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 
 	err := h.u.DeleteRoom(userID, roomID)
 	if err != nil {
-		switch v := err.(type) {
-		case *errors.RestError:
-			c.JSON(v.Code, v)
-			return
-		default:
-			c.JSON(http.StatusInternalServerError, errors.NewInternalServerError(err.Error()))
-			return
-		}
+		setRESTError(err, c)
+		return
 	}
 
 	c.JSON(http.StatusCreated, httputils.NewResponse("Room Deleted"))
+}
+
+func setRESTError(err error, c *gin.Context) {
+	switch v := err.(type) {
+	case *errors.RestError:
+		c.JSON(v.Code, v)
+	default:
+		c.JSON(http.StatusInternalServerError, errors.NewInternalServerError(err.Error()))
+	}
 }
