@@ -29,7 +29,7 @@ func (h *RoomHandler) SaveRoom(c *gin.Context) {
 	ctx := c.Request.Context()
 	err = h.u.SaveRoom(ctx, &room)
 	if err != nil {
-		setRESTError(err, c)
+		errors.SetRESTError(err, c)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (h *RoomHandler) AddUserToRoom(c *gin.Context) {
 	ctx := c.Request.Context()
 	err := h.u.AddUserToRoom(ctx, roomID, userID)
 	if err != nil {
-		setRESTError(err, c)
+		errors.SetRESTError(err, c)
 		return
 	}
 
@@ -65,7 +65,7 @@ func (h *RoomHandler) RemoveUserFromRoom(c *gin.Context) {
 	ctx := c.Request.Context()
 	err := h.u.RemoveUserFromRoom(ctx, roomID, userID)
 	if err != nil {
-		setRESTError(err, c)
+		errors.SetRESTError(err, c)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (h *RoomHandler) GetChatRoomsFor(c *gin.Context) {
 	ctx := c.Request.Context()
 	studentChatRooms, err := h.u.GetChatRoomsFor(ctx, userID)
 	if err != nil {
-		setRESTError(err, c)
+		errors.SetRESTError(err, c)
 		return
 	}
 
@@ -100,18 +100,9 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 	ctx := c.Request.Context()
 	err := h.u.DeleteRoom(ctx, userID, roomID)
 	if err != nil {
-		setRESTError(err, c)
+		errors.SetRESTError(err, c)
 		return
 	}
 
 	c.JSON(http.StatusAccepted, httputils.NewResponse("Room Deleted"))
-}
-
-func setRESTError(err error, c *gin.Context) {
-	switch v := err.(type) {
-	case *errors.RestError:
-		c.JSON(v.Code, v)
-	default:
-		c.JSON(http.StatusInternalServerError, errors.NewInternalServerError(err.Error()))
-	}
 }

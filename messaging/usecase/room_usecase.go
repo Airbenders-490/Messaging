@@ -35,36 +35,24 @@ func (u *roomUseCase) SaveRoom(ctx context.Context, room *domain.ChatRoom) error
 		return errors.NewConflictError(fmt.Sprintf("Room with ID %s already exists", room.RoomID))
 	}
 
-	for _,participant := range room.Students {
+	for _, participant := range room.Students {
 		_, err = u.sr.GetStudent(ctx, participant.ID)
 		if err != nil {
 			return errors.NewConflictError(fmt.Sprintf("The participant with ID %s does not exist", participant.ID))
 		}
 	}
 
-	err = u.rr.SaveRoomAndAddRoomForAllParticipants(ctx, room)
-	if err != nil {
-		return errors.NewInternalServerError("Unable to Save Room")
-	}
-	return err
+	return u.rr.SaveRoomAndAddRoomForAllParticipants(ctx, room)
 }
 
 // AddUserToRoom should add user to room in chat.room and add room to student in chat.student_rooms
 func (u *roomUseCase) AddUserToRoom(ctx context.Context, roomID string, userID string) error {
-	err := u.rr.AddParticipantToRoomAndAddRoomForParticipant(ctx, roomID, userID)
-	if err != nil {
-		return errors.NewInternalServerError("Unable to Add User to Room")
-	}
-	return err
+	return u.rr.AddParticipantToRoomAndAddRoomForParticipant(ctx, roomID, userID)
 }
 
 // RemoveUserFromRoom should remove user from room in chat.room and remove room from user in chat.student_rooms
 func (u *roomUseCase) RemoveUserFromRoom(ctx context.Context, roomID string, userID string) error {
-	err := u.rr.RemoveParticipantFromRoomAndRemoveRoomForParticipant(ctx, roomID, userID)
-	if err != nil {
-		return errors.NewInternalServerError("Unable to Remove User from Room")
-	}
-	return err
+	return u.rr.RemoveParticipantFromRoomAndRemoveRoomForParticipant(ctx, roomID, userID)
 }
 
 // GetChatRoomsFor should get rooms for user in chat.student_rooms
@@ -104,16 +92,12 @@ func (u *roomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*doma
 func (u *roomUseCase) DeleteRoom(ctx context.Context, userID string, roomID string) error {
 	room, err := u.rr.GetRoom(ctx, roomID)
 	if err != nil {
-		return errors.NewConflictError(fmt.Sprintf("Room with ID %s does NOT exist", roomID))
+		return err
 	}
 
 	if room.Admin.ID != userID {
 		return errors.NewUnauthorizedError("Unauthorized to delete room, you are not Admin")
 	}
 
-	err = u.rr.RemoveRoomForParticipantsAndDeleteRoom(ctx, room)
-	if err != nil {
-		return errors.NewInternalServerError("Unable to Remove User from Room")
-	}
-	return err
+	return u.rr.RemoveRoomForParticipantsAndDeleteRoom(ctx, room)
 }
