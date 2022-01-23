@@ -13,7 +13,8 @@ func mapUrls(router *gin.Engine, mh *http.MessageHandler, rh *http.RoomHandler) 
 		roomID := c.Param("roomID")
 		// todo: get this from jwt token
 		userID := strconv.Itoa(rand.Int())
-		mh.ServeWs(c.Writer, c.Request, roomID, userID)
+		ctx := c.Request.Context()
+		mh.ServeWs(c.Writer, c.Request, roomID, userID, ctx)
 	})
 
 	router.POST("/rooms", rh.SaveRoom)

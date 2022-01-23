@@ -26,8 +26,8 @@ func (h *RoomHandler) SaveRoom(c *gin.Context) {
 		return
 	}
 
-	//ctx := c.Request.Context()
-	err = h.u.SaveRoom(&room)
+	ctx := c.Request.Context()
+	err = h.u.SaveRoom(ctx, &room)
 	if err != nil {
 		setRESTError(err, c)
 		return
@@ -44,7 +44,8 @@ func (h *RoomHandler) AddUserToRoom(c *gin.Context) {
 		return
 	}
 
-	err := h.u.AddUserToRoom(roomID, userID)
+	ctx := c.Request.Context()
+	err := h.u.AddUserToRoom(ctx, roomID, userID)
 	if err != nil {
 		setRESTError(err, c)
 		return
@@ -61,7 +62,8 @@ func (h *RoomHandler) RemoveUserFromRoom(c *gin.Context) {
 		return
 	}
 
-	err := h.u.RemoveUserFromRoom(roomID, userID)
+	ctx := c.Request.Context()
+	err := h.u.RemoveUserFromRoom(ctx, roomID, userID)
 	if err != nil {
 		setRESTError(err, c)
 		return
@@ -77,7 +79,8 @@ func (h *RoomHandler) GetChatRoomsFor(c *gin.Context) {
 		return
 	}
 
-	studentChatRooms, err := h.u.GetChatRoomsFor(userID)
+	ctx := c.Request.Context()
+	studentChatRooms, err := h.u.GetChatRoomsFor(ctx, userID)
 	if err != nil {
 		setRESTError(err, c)
 		return
@@ -94,7 +97,8 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 		return
 	}
 
-	err := h.u.DeleteRoom(userID, roomID)
+	ctx := c.Request.Context()
+	err := h.u.DeleteRoom(ctx, userID, roomID)
 	if err != nil {
 		setRESTError(err, c)
 		return

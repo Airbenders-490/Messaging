@@ -21,7 +21,7 @@ const (
 	// chat.room queries
 	addParticipantToRoom      = `UPDATE chat.room SET students = students +? WHERE roomid=?;`
 	deleteRoom                = `DELETE FROM chat.room WHERE roomid=?;`
-	getRoom                   = `SELECT * FROM chat.room WHERE roomid=? LIMIT 1;`
+	getRoom                   = `SELECT * FROM chat.room WHERE roomid=?;`
 	removeParticipantFromRoom = `UPDATE chat.room SET students = students -? WHERE roomid=?;`
 	saveRoom                  = `INSERT INTO chat.room (roomid, name, admin, students) VALUES (?,?,?,?);`
 
@@ -31,20 +31,20 @@ const (
 	removeRoomForParticipant = `UPDATE chat.student_rooms SET rooms = rooms-? WHERE student=?;`
 )
 
-func (r RoomRepository) AddParticipantToRoom(userID string, roomID string) error {
-	return r.dbSession.Query(addParticipantToRoom, [1]string{userID}, roomID).Consistency(gocql.One).Exec()
+func (r RoomRepository) AddParticipantToRoom(ctx context.Context, userID string, roomID string) error {
+	return r.dbSession.Query(addParticipantToRoom, [1]string{userID}, roomID).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
-func (r RoomRepository) DeleteRoom(roomID string) error {
-	return r.dbSession.Query(deleteRoom, roomID).Consistency(gocql.One).Exec()
+func (r RoomRepository) DeleteRoom(ctx context.Context, roomID string) error {
+	return r.dbSession.Query(deleteRoom, roomID).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
-func (r RoomRepository) GetRoom(roomID string) (*domain.ChatRoom, error) {
+func (r RoomRepository) GetRoom(ctx context.Context, roomID string) (*domain.ChatRoom, error) {
 	var room domain.ChatRoom
 	var studentText []string
 	var allStudents []domain.Student
 
-	err := r.dbSession.Query(getRoom, roomID).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin.ID, &room.Deleted, &room.Name, &studentText)
+	err := r.dbSession.Query(getRoom, roomID).WithContext(ctx).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin.ID, &room.Deleted, &room.Name, &studentText)
 	if err != nil {
 		return nil, err
 	}
@@ -59,25 +59,25 @@ func (r RoomRepository) GetRoom(roomID string) (*domain.ChatRoom, error) {
 	return &room, err
 }
 
-func (r RoomRepository) RemoveParticipantFromRoom(userID string, roomID string) error {
-	return r.dbSession.Query(removeParticipantFromRoom, [1]string{userID}, roomID).Consistency(gocql.One).Exec()
+func (r RoomRepository) RemoveParticipantFromRoom(ctx context.Context, userID string, roomID string) error {
+	return r.dbSession.Query(removeParticipantFromRoom, [1]string{userID}, roomID).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
-func (r RoomRepository) SaveRoom(room *domain.ChatRoom) error {
+func (r RoomRepository) SaveRoom(ctx context.Context, room *domain.ChatRoom) error {
 	var userIDArr []string
 	for _, student := range room.Students {
 		userIDArr = append(userIDArr, student.ID)
 	}
-	return r.dbSession.Query(saveRoom, room.RoomID, room.Name, room.Admin.ID, userIDArr).Consistency(gocql.One).Exec()
+	return r.dbSession.Query(saveRoom, room.RoomID, room.Name, room.Admin.ID, userIDArr).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
-func (r RoomRepository) AddRoomForParticipant(roomID string, userID string) error {
-	return r.dbSession.Query(addRoomForParticipant, [1]string{roomID}, userID).Consistency(gocql.One).Exec()
+func (r RoomRepository) AddRoomForParticipant(ctx context.Context, roomID string, userID string) error {
+	return r.dbSession.Query(addRoomForParticipant, [1]string{roomID}, userID).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
-func (r RoomRepository) AddRoomForParticipants(roomID string, userIDs []string) error {
+func (r RoomRepository) AddRoomForParticipants(ctx context.Context, roomID string, userIDs []string) error {
 	for _, id := range userIDs {
-		err := r.dbSession.Query(addRoomForParticipant, [1]string{roomID}, id).Consistency(gocql.One).Exec()
+		err := r.dbSession.Query(addRoomForParticipant, [1]string{roomID}, id).WithContext(ctx).Consistency(gocql.One).Exec()
 		if err != nil {
 			return err
 		}
@@ -85,11 +85,11 @@ func (r RoomRepository) AddRoomForParticipants(roomID string, userIDs []string) 
 	return nil
 }
 
-func (r RoomRepository) GetRoomsFor(userID string) (*domain.StudentChatRooms, error) {
+func (r RoomRepository) GetRoomsFor(ctx context.Context, userID string) (*domain.StudentChatRooms, error) {
 	var StudentRoom domain.StudentChatRooms
 	var roomsID []string // used to unmarshall entire set to [0]th entry in string array
 	var rooms []domain.ChatRoom
-	err := r.dbSession.Query(getRoomsFor, userID).Consistency(gocql.One).Scan(&StudentRoom.Student.ID, &roomsID)
+	err := r.dbSession.Query(getRoomsFor, userID).WithContext(ctx).Consistency(gocql.One).Scan(&StudentRoom.Student.ID, &roomsID)
 	if err != nil {
 		return nil, err
 	}
@@ -106,15 +106,15 @@ func (r RoomRepository) GetRoomsFor(userID string) (*domain.StudentChatRooms, er
 	return &StudentRoom, err
 }
 
-func (r RoomRepository) RemoveRoomForParticipant(roomID string, userID string) error {
-	return r.dbSession.Query(removeRoomForParticipant, [1]string{roomID}, userID).Consistency(gocql.One).Exec()
+func (r RoomRepository) RemoveRoomForParticipant(ctx context.Context, roomID string, userID string) error {
+	return r.dbSession.Query(removeRoomForParticipant, [1]string{roomID}, userID).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
-func (r RoomRepository) RemoveRoomForParticipants(roomID string, students []domain.Student) error {
+func (r RoomRepository) RemoveRoomForParticipants(ctx context.Context, roomID string, students []domain.Student) error {
 	roomIDArr := [1]string{roomID}
 	for _, student := range students {
 		// Uses roomID Array bc cannot marshal string into set type
-		err := r.dbSession.Query(removeRoomForParticipant, roomIDArr, student.ID).Consistency(gocql.One).Exec()
+		err := r.dbSession.Query(removeRoomForParticipant, roomIDArr, student.ID).WithContext(ctx).Consistency(gocql.One).Exec()
 		if err != nil {
 			return err
 		}
@@ -122,8 +122,8 @@ func (r RoomRepository) RemoveRoomForParticipants(roomID string, students []doma
 	return nil
 }
 
-func (r RoomRepository) SaveRoomAndAddRoomForAllParticipants(room *domain.ChatRoom) error {
-	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(context.Background())
+func (r RoomRepository) SaveRoomAndAddRoomForAllParticipants(ctx context.Context, room *domain.ChatRoom) error {
+	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
 
 	var userIDArr []string
 	for _, user := range room.Students {
@@ -145,8 +145,8 @@ func (r RoomRepository) SaveRoomAndAddRoomForAllParticipants(room *domain.ChatRo
 	return r.dbSession.ExecuteBatch(batch)
 }
 
-func (r RoomRepository) RemoveRoomForParticipantsAndDeleteRoom(room *domain.ChatRoom) error {
-	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(context.Background())
+func (r RoomRepository) RemoveRoomForParticipantsAndDeleteRoom(ctx context.Context, room *domain.ChatRoom) error {
+	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
 
 	// RemoveRoomForParticipants for chat.student_rooms
 	for _, user := range room.Students {
@@ -163,8 +163,8 @@ func (r RoomRepository) RemoveRoomForParticipantsAndDeleteRoom(room *domain.Chat
 	return r.dbSession.ExecuteBatch(batch)
 }
 
-func (r RoomRepository) AddParticipantToRoomAndAddRoomForParticipant(roomID string, userID string) error {
-	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(context.Background())
+func (r RoomRepository) AddParticipantToRoomAndAddRoomForParticipant(ctx context.Context, roomID string, userID string) error {
+	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
 	batch.Entries = append(batch.Entries, gocql.BatchEntry{
 		Stmt: addParticipantToRoom,
 		Args: []interface{}{[1]string{userID}, roomID},
@@ -176,8 +176,8 @@ func (r RoomRepository) AddParticipantToRoomAndAddRoomForParticipant(roomID stri
 	return r.dbSession.ExecuteBatch(batch)
 }
 
-func (r RoomRepository) RemoveParticipantFromRoomAndRemoveRoomForParticipant(roomID string, userID string) error {
-	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(context.Background())
+func (r RoomRepository) RemoveParticipantFromRoomAndRemoveRoomForParticipant(ctx context.Context, roomID string, userID string) error {
+	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
 	batch.Entries = append(batch.Entries, gocql.BatchEntry{
 		Stmt: removeParticipantFromRoom,
 		Args: []interface{}{[1]string{userID}, roomID},

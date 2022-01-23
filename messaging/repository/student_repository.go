@@ -2,6 +2,7 @@ package repository
 
 import (
 	"chat/domain"
+	"context"
 	"github.com/gocql/gocql"
 )
 
@@ -20,13 +21,13 @@ const (
 	getStudent  = `SELECT * FROM chat.student WHERE student_id=?;`
 )
 
-func (r StudentRepository) SaveStudent(student *domain.Student) error {
-	return r.dbSession.Query(saveStudent, student.ID, student.FirstName, student.LastName).Consistency(gocql.One).Exec()
+func (r StudentRepository) SaveStudent(ctx context.Context, student *domain.Student) error {
+	return r.dbSession.Query(saveStudent, student.ID, student.FirstName, student.LastName).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
-func (r StudentRepository) GetStudent(userID string) (*domain.Student, error) {
+func (r StudentRepository) GetStudent(ctx context.Context, userID string) (*domain.Student, error) {
 	var student domain.Student
-	err := r.dbSession.Query(getStudent, userID).Consistency(gocql.One).Scan(&student.ID, &student.FirstName, &student.LastName)
+	err := r.dbSession.Query(getStudent, userID).WithContext(ctx).Consistency(gocql.One).Scan(&student.ID, &student.FirstName, &student.LastName)
 	if err != nil {
 		return nil, err
 	}
