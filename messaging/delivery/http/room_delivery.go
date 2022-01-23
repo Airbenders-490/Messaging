@@ -50,7 +50,7 @@ func (h *RoomHandler) AddUserToRoom(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, httputils.NewResponse("User added to Room"))
+	c.JSON(http.StatusAccepted, httputils.NewResponse("User added to Room"))
 }
 
 func (h *RoomHandler) RemoveUserFromRoom(c *gin.Context) {
@@ -67,7 +67,7 @@ func (h *RoomHandler) RemoveUserFromRoom(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, httputils.NewResponse("User Removed from Room"))
+	c.JSON(http.StatusAccepted, httputils.NewResponse("User Removed from Room"))
 }
 
 func (h *RoomHandler) GetChatRoomsFor(c *gin.Context) {
@@ -83,7 +83,7 @@ func (h *RoomHandler) GetChatRoomsFor(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, studentChatRooms)
+	c.JSON(http.StatusOK, studentChatRooms)
 }
 
 func (h *RoomHandler) DeleteRoom(c *gin.Context) {
@@ -100,7 +100,7 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, httputils.NewResponse("Room Deleted"))
+	c.JSON(http.StatusAccepted, httputils.NewResponse("Room Deleted"))
 }
 
 func setRESTError(err error, c *gin.Context) {
