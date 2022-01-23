@@ -21,16 +21,12 @@ const (
 )
 
 func (r StudentRepository) SaveStudent(student *domain.Student) error {
-	err := r.dbSession.Query(saveStudent, student.ID, student.FirstName, student.LastName).Consistency(gocql.One).Exec()
-	if err != nil {
-		return err
-	}
-	return nil
+	return r.dbSession.Query(saveStudent, student.ID, student.FirstName, student.LastName).Consistency(gocql.One).Exec()
 }
 
-func (r StudentRepository) GetStudent(studentID string) (*domain.Student, error) {
+func (r StudentRepository) GetStudent(userID string) (*domain.Student, error) {
 	var student domain.Student
-	err := r.dbSession.Query(getStudent, studentID).Consistency(gocql.One).Scan(&student.ID, &student.FirstName, &student.LastName)
+	err := r.dbSession.Query(getStudent, userID).Consistency(gocql.One).Scan(&student.ID, &student.FirstName, &student.LastName)
 	if err != nil {
 		return nil, err
 	}

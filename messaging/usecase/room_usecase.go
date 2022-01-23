@@ -11,9 +11,9 @@ import (
 /*
 
 	SaveRoom( room *ChatRoom) error
-	AddUserToRoom(roomID string, studentID string) error
-	RemoveUserFromRoom(roomID string, studentID string) error
-	GetChatRoomsFor( studentID string) (*StudentChatRooms, error)
+	AddUserToRoom(roomID string, userID string) error
+	RemoveUserFromRoom(roomID string, userID string) error
+	GetChatRoomsFor( userID string) (*StudentChatRooms, error)
 	DeleteRoom( userID string, roomID string) error
 */
 type roomUseCase struct {
@@ -46,8 +46,8 @@ func (u *roomUseCase) SaveRoom(room *domain.ChatRoom) error {
 }
 
 // AddUserToRoom should add user to room in chat.room and add room to student in chat.student_rooms
-func (u *roomUseCase) AddUserToRoom(roomID string, studentID string) error {
-	err := u.rr.AddParticipantToRoomAndAddRoomForParticipant(roomID, studentID)
+func (u *roomUseCase) AddUserToRoom(roomID string, userID string) error {
+	err := u.rr.AddParticipantToRoomAndAddRoomForParticipant(roomID, userID)
 	if err != nil {
 		return errors.NewInternalServerError("Unable to Add User to Room")
 	}
@@ -64,15 +64,15 @@ func (u *roomUseCase) RemoveUserFromRoom(roomID string, userID string) error {
 }
 
 // GetChatRoomsFor should get rooms for user in chat.student_rooms
-func (u *roomUseCase) GetChatRoomsFor(studentID string) (*domain.StudentChatRooms, error) {
+func (u *roomUseCase) GetChatRoomsFor(userID string) (*domain.StudentChatRooms, error) {
 
-	_, err := u.sr.GetStudent(studentID)
+	_, err := u.sr.GetStudent(userID)
 	if err != nil {
-		return nil, errors.NewConflictError(fmt.Sprintf("The Student with ID %s does not exist", studentID))
+		return nil, errors.NewConflictError(fmt.Sprintf("The Student with ID %s does not exist", userID))
 	}
 	var studentChatRooms *domain.StudentChatRooms
 
-	studentChatRooms, err = u.rr.GetRoomsFor(studentID)
+	studentChatRooms, err = u.rr.GetRoomsFor(userID)
 	if err != nil {
 		return nil, err
 	}

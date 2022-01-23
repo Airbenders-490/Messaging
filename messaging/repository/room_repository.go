@@ -31,8 +31,8 @@ const (
 	removeRoomForParticipant = `UPDATE chat.student_rooms SET rooms = rooms-? WHERE student=?;`
 )
 
-func (r RoomRepository) AddParticipantToRoom(studentID string, roomID string) error {
-	return r.dbSession.Query(addParticipantToRoom, [1]string{studentID}, roomID).Consistency(gocql.One).Exec()
+func (r RoomRepository) AddParticipantToRoom(userID string, roomID string) error {
+	return r.dbSession.Query(addParticipantToRoom, [1]string{userID}, roomID).Consistency(gocql.One).Exec()
 }
 
 func (r RoomRepository) DeleteRoom(roomID string) error {
@@ -59,24 +59,24 @@ func (r RoomRepository) GetRoom(roomID string) (*domain.ChatRoom, error) {
 	return &room, err
 }
 
-func (r RoomRepository) RemoveParticipantFromRoom(studentID string, roomID string) error {
-	return r.dbSession.Query(removeParticipantFromRoom, [1]string{studentID}, roomID).Consistency(gocql.One).Exec()
+func (r RoomRepository) RemoveParticipantFromRoom(userID string, roomID string) error {
+	return r.dbSession.Query(removeParticipantFromRoom, [1]string{userID}, roomID).Consistency(gocql.One).Exec()
 }
 
 func (r RoomRepository) SaveRoom(room *domain.ChatRoom) error {
-	var studentIDArr []string
+	var userIDArr []string
 	for _, student := range room.Students {
-		studentIDArr = append(studentIDArr, student.ID)
+		userIDArr = append(userIDArr, student.ID)
 	}
-	return r.dbSession.Query(saveRoom, room.RoomID, room.Name, room.Admin.ID, studentIDArr).Consistency(gocql.One).Exec()
+	return r.dbSession.Query(saveRoom, room.RoomID, room.Name, room.Admin.ID, userIDArr).Consistency(gocql.One).Exec()
 }
 
-func (r RoomRepository) AddRoomForParticipant(roomID string, studentID string) error {
-	return r.dbSession.Query(addRoomForParticipant, [1]string{roomID}, studentID).Consistency(gocql.One).Exec()
+func (r RoomRepository) AddRoomForParticipant(roomID string, userID string) error {
+	return r.dbSession.Query(addRoomForParticipant, [1]string{roomID}, userID).Consistency(gocql.One).Exec()
 }
 
-func (r RoomRepository) AddRoomForParticipants(roomID string, studentIDs []string) error {
-	for _, id := range studentIDs {
+func (r RoomRepository) AddRoomForParticipants(roomID string, userIDs []string) error {
+	for _, id := range userIDs {
 		err := r.dbSession.Query(addRoomForParticipant, [1]string{roomID}, id).Consistency(gocql.One).Exec()
 		if err != nil {
 			return err
@@ -85,11 +85,11 @@ func (r RoomRepository) AddRoomForParticipants(roomID string, studentIDs []strin
 	return nil
 }
 
-func (r RoomRepository) GetRoomsFor(studentID string) (*domain.StudentChatRooms, error) {
+func (r RoomRepository) GetRoomsFor(userID string) (*domain.StudentChatRooms, error) {
 	var StudentRoom domain.StudentChatRooms
 	var roomsID []string // used to unmarshall entire set to [0]th entry in string array
 	var rooms []domain.ChatRoom
-	err := r.dbSession.Query(getRoomsFor, studentID).Consistency(gocql.One).Scan(&StudentRoom.Student.ID, &roomsID)
+	err := r.dbSession.Query(getRoomsFor, userID).Consistency(gocql.One).Scan(&StudentRoom.Student.ID, &roomsID)
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +106,8 @@ func (r RoomRepository) GetRoomsFor(studentID string) (*domain.StudentChatRooms,
 	return &StudentRoom, err
 }
 
-func (r RoomRepository) RemoveRoomForParticipant(roomID string, studentID string) error {
-	return r.dbSession.Query(removeRoomForParticipant, [1]string{roomID}, studentID).Consistency(gocql.One).Exec()
+func (r RoomRepository) RemoveRoomForParticipant(roomID string, userID string) error {
+	return r.dbSession.Query(removeRoomForParticipant, [1]string{roomID}, userID).Consistency(gocql.One).Exec()
 }
 
 func (r RoomRepository) RemoveRoomForParticipants(roomID string, students []domain.Student) error {
@@ -163,28 +163,28 @@ func (r RoomRepository) RemoveRoomForParticipantsAndDeleteRoom(room *domain.Chat
 	return r.dbSession.ExecuteBatch(batch)
 }
 
-func (r RoomRepository) AddParticipantToRoomAndAddRoomForParticipant(roomID string, studentID string) error {
+func (r RoomRepository) AddParticipantToRoomAndAddRoomForParticipant(roomID string, userID string) error {
 	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(context.Background())
 	batch.Entries = append(batch.Entries, gocql.BatchEntry{
 		Stmt: addParticipantToRoom,
-		Args: []interface{}{[1]string{studentID}, roomID},
+		Args: []interface{}{[1]string{userID}, roomID},
 	})
 	batch.Entries = append(batch.Entries, gocql.BatchEntry{
 		Stmt: addRoomForParticipant,
-		Args: []interface{}{[1]string{roomID}, studentID},
+		Args: []interface{}{[1]string{roomID}, userID},
 	})
 	return r.dbSession.ExecuteBatch(batch)
 }
 
-func (r RoomRepository) RemoveParticipantFromRoomAndRemoveRoomForParticipant(roomID string, studentID string) error {
+func (r RoomRepository) RemoveParticipantFromRoomAndRemoveRoomForParticipant(roomID string, userID string) error {
 	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(context.Background())
 	batch.Entries = append(batch.Entries, gocql.BatchEntry{
 		Stmt: removeParticipantFromRoom,
-		Args: []interface{}{[1]string{studentID}, roomID},
+		Args: []interface{}{[1]string{userID}, roomID},
 	})
 	batch.Entries = append(batch.Entries, gocql.BatchEntry{
 		Stmt: removeRoomForParticipant,
-		Args: []interface{}{[1]string{roomID}, studentID},
+		Args: []interface{}{[1]string{roomID}, userID},
 	})
 	return r.dbSession.ExecuteBatch(batch)
 }
