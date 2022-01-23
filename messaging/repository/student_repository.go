@@ -14,24 +14,25 @@ func NewStudentRepository(session *gocql.Session) *StudentRepository {
 		dbSession: session,
 	}
 }
+
 const (
 	saveStudent = `INSERT INTO chat.student (student_id, first_name, last_name) VALUES (?,?,?);`
-	getStudent = `SELECT * FROM chat.student WHERE student_id=?;`
+	getStudent  = `SELECT * FROM chat.student WHERE student_id=?;`
 )
 
 func (r StudentRepository) SaveStudent(student *domain.Student) error {
 	err := r.dbSession.Query(saveStudent, student.ID, student.FirstName, student.LastName).Consistency(gocql.One).Exec()
-	if err!=nil {
-		return err ;
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func (r StudentRepository) GetStudent (studentID string) (*domain.Student, error) {
+func (r StudentRepository) GetStudent(studentID string) (*domain.Student, error) {
 	var student domain.Student
 	err := r.dbSession.Query(getStudent, studentID).Consistency(gocql.One).Scan(&student.ID, &student.FirstName, &student.LastName)
-	if err!=nil {
-		return nil, err ;
+	if err != nil {
+		return nil, err
 	}
 	return &student, nil
 }

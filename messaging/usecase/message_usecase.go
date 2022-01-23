@@ -21,7 +21,7 @@ func (u *messageUseCase) IsAuthorized(userID, roomID string) (authorized bool) {
 	_, cancel := context.WithTimeout(context.Background(), u.timeout)
 	defer cancel()
 
-	studentChatRooms, err := u.roomRepository.GetRoomsFor( userID)
+	studentChatRooms, err := u.roomRepository.GetRoomsFor(userID)
 	if err != nil {
 		return false
 	}

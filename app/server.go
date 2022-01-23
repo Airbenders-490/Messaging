@@ -20,7 +20,6 @@ func Server(mh *http.MessageHandler, rh *http.RoomHandler) *gin.Engine {
 // Start runs the server
 func Start() {
 	cluster := gocql.NewCluster(os.Getenv("CASSANDRA_HOST"))
-	cluster.Keyspace = os.Getenv("CASSANDRA_CHAT_KEYSPACE")
 
 	session, err := cluster.CreateSession()
 	if err != nil {
