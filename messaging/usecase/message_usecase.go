@@ -49,7 +49,7 @@ func (u *messageUseCase) SaveMessage(ctx context.Context, message *domain.Messag
 	return nil
 }
 
-func (u *messageUseCase) EditMessage(ctx context.Context, roomID string, userID string, timeStamp time.Time, message string) error {
+func (u *messageUseCase) EditMessage(ctx context.Context, roomID string, userID string, timeStamp time.Time, message string) (*domain.Message, error) {
 	c, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
@@ -57,25 +57,25 @@ func (u *messageUseCase) EditMessage(ctx context.Context, roomID string, userID 
 	//get existing message at timestamp
 	existingMessage, err := u.messageRepository.GetMessage(ctx, roomID, timeStamp)
 	if err != nil {
-		return err
+		return nil, errors.NewNotFoundError("Message does not exist")
 	}
 
-	//if userID != existingMessage.FromStudentID{
-	//	return errors.NewUnauthorizedError("Users can only edit their own messages")
-	//}
+	if userID != existingMessage.FromStudentID{
+		return nil, errors.NewUnauthorizedError("Users can only edit their own messages")
+	}
 
 	if message == "" || message == existingMessage.MessageBody {
-		return errors.NewBadRequestError("Message body is the same or empty")
+		return nil, errors.NewBadRequestError("Message body is the same or empty")
 	}
 
 	existingMessage.MessageBody = message
-	err = u.messageRepository.EditMessage(c, existingMessage)
+	editedMsg, err := u.messageRepository.EditMessage(c, existingMessage)
 
 	if err != nil {
-		return err
+		return nil, errors.NewInternalServerError(err.Error())
 	}
 
-	return nil
+	return editedMsg, nil
 }
 
 func (u *messageUseCase) GetMessages(ctx context.Context, roomID string, timeStamp time.Time, limit int) ([]domain.Message, error) {
