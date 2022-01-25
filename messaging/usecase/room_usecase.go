@@ -29,6 +29,8 @@ func NewRoomUseCase(rr domain.RoomRepository, sr domain.StudentRepository, t tim
 
 // SaveRoom should add room to chat.room & chat.student_rooms for all participants
 func (u *roomUseCase) SaveRoom(ctx context.Context, room *domain.ChatRoom) error {
+	ctx, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
 
 	_, err := u.rr.GetRoom(ctx, room.RoomID)
 	if err == nil {
@@ -47,16 +49,24 @@ func (u *roomUseCase) SaveRoom(ctx context.Context, room *domain.ChatRoom) error
 
 // AddUserToRoom should add user to room in chat.room and add room to student in chat.student_rooms
 func (u *roomUseCase) AddUserToRoom(ctx context.Context, roomID string, userID string) error {
+	ctx, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
+
 	return u.rr.AddParticipantToRoomAndAddRoomForParticipant(ctx, roomID, userID)
 }
 
 // RemoveUserFromRoom should remove user from room in chat.room and remove room from user in chat.student_rooms
 func (u *roomUseCase) RemoveUserFromRoom(ctx context.Context, roomID string, userID string) error {
+	ctx, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
+
 	return u.rr.RemoveParticipantFromRoomAndRemoveRoomForParticipant(ctx, roomID, userID)
 }
 
 // GetChatRoomsFor should get rooms for user in chat.student_rooms
 func (u *roomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*domain.StudentChatRooms, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
 
 	_, err := u.sr.GetStudent(ctx, userID)
 	if err != nil {
@@ -90,6 +100,9 @@ func (u *roomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*doma
 
 // DeleteRoom should delete room for all users in chat.student_rooms and delete room from chat.room
 func (u *roomUseCase) DeleteRoom(ctx context.Context, userID string, roomID string) error {
+	ctx, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
+
 	room, err := u.rr.GetRoom(ctx, roomID)
 	if err != nil {
 		return err

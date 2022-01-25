@@ -26,9 +26,6 @@ func (u *messageUseCase) IsAuthorized(ctx context.Context, userID, roomID string
 		return false
 	}
 
-	// todo: this is temporary. Must be removed!
-	authorized = true
-	return
 	for _, room := range studentChatRooms.Rooms {
 		if roomID == room.RoomID {
 			authorized = true
