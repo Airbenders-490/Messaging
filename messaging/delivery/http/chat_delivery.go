@@ -116,8 +116,8 @@ func (c *connection) write(mt int, payload []byte) error {
 
 // ServeWs is the handleFunc for connecting to a room's websocket. A user must be authorized, i.e. already added to
 // the room before he can connect to the room. Otherwise, returns 401.
-func (h *MessageHandler) ServeWs(w http.ResponseWriter, r *http.Request, roomID string, userID string) {
-	authorized := h.u.IsAuthorized(userID, roomID)
+func (h *MessageHandler) ServeWs(w http.ResponseWriter, r *http.Request, roomID string, userID string, ctx context.Context) {
+	authorized := h.u.IsAuthorized(ctx, userID, roomID)
 	if !authorized {
 		w.WriteHeader(http.StatusUnauthorized)
 		io.WriteString(w, "Not authorized to enter the room number "+roomID)

@@ -1,12 +1,12 @@
 version: '3.7'
 
 services:
-  app:
-    build:
-      dockerfile: Dockerfile
-      context: .
-    volumes:
-      - .:/chat
+#  app:
+#    build:
+#      dockerfile: Dockerfile
+#      context: .
+#    volumes:
+#      - .:/chat
   cassandra:
     image: cassandra:latest
     container_name: cassandra
@@ -30,5 +30,5 @@ services:
     depends_on:
       - cassandra
     volumes:
-      - ./repository/cassandra_chat_schema.cql:/schema.cql
-    command: /bin/bash -c "sleep 60 && echo loading cassandra keyspace && cqlsh cassandra -f /schema.cql"
+      - ./messaging/repository/preparekeyspace/cassandra_chat_schema.cql:/schema.cql
+    command: /bin/bash -c "sleep 100 && echo loading cassandra keyspace && cqlsh cassandra -f /schema.cql"

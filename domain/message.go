@@ -27,5 +27,5 @@ type MessageUseCase interface {
 	EditMessage(ctx context.Context, userID string, message *Message) error
 	GetMessages(ctx context.Context, roomID string, timeStamp time.Time) ([]Message, error)
 	DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error
-	IsAuthorized(userID, roomID string) bool
+	IsAuthorized(ctx context.Context, userID, roomID string) bool
 }

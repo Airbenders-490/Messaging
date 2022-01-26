@@ -11,16 +11,15 @@ import (
 	"time"
 )
 
-func Server(messageHandler *http.MessageHandler) *gin.Engine {
+func Server(mh *http.MessageHandler, rh *http.RoomHandler) *gin.Engine {
 	router := gin.Default()
-	mapUrls(router, messageHandler)
+	mapUrls(router, mh, rh)
 	return router
 }
 
 // Start runs the server
 func Start() {
 	cluster := gocql.NewCluster(os.Getenv("CASSANDRA_HOST"))
-	cluster.Keyspace = os.Getenv("CASSANDRA_CHAT_KEYSPACE")
 
 	session, err := cluster.CreateSession()
 	if err != nil {
@@ -30,9 +29,15 @@ func Start() {
 
 	mr := repository.NewChatRepository(session)
 	rr := repository.NewRoomRepository(session)
-	u := usecase.NewMessageUseCase(time.Second*2, mr, rr)
-	messageHandler := http.NewMessageHandler(u)
+	sr := repository.NewStudentRepository(session)
+
+	mu := usecase.NewMessageUseCase(time.Second*2, mr, rr)
+	mh := http.NewMessageHandler(mu)
+
+	ru := usecase.NewRoomUseCase(rr, sr, time.Second*2)
+	rh := http.NewRoomHandler(ru)
+
 	go http.MainHub.StartHubListener()
-	router := Server(messageHandler)
+	router := Server(mh, rh)
 	router.Run()
 }
