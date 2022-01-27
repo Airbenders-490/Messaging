@@ -35,7 +35,7 @@ func TestAddParticipantToRoomSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.AddParticipantToRoom(ctx, mock.Anything, mock.Anything) ; err != nil {
+	if err := rr.AddParticipantToRoom(ctx, mock.Anything, mock.Anything); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -48,7 +48,7 @@ func TestDeleteRoomSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.DeleteRoom(ctx, mock.Anything) ; err != nil {
+	if err := rr.DeleteRoom(ctx, mock.Anything); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -63,7 +63,7 @@ func TestGetRoomSuccessEmptyRoom(t *testing.T) {
 
 	_, err := rr.GetRoom(ctx, mock.Anything)
 
-	if  err != nil {
+	if err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -78,7 +78,7 @@ func TestGetRoomFail(t *testing.T) {
 
 	_, err := rr.GetRoom(ctx, mock.Anything)
 
-	if  err == nil {
+	if err == nil {
 		t.Errorf("Actual no error, expected error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -91,7 +91,7 @@ func TestRemoveParticipantFromRoomSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.RemoveParticipantFromRoom(ctx, mock.Anything, mock.Anything) ; err != nil {
+	if err := rr.RemoveParticipantFromRoom(ctx, mock.Anything, mock.Anything); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -104,7 +104,7 @@ func TestSaveRoomSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.SaveRoom(ctx, room) ; err != nil {
+	if err := rr.SaveRoom(ctx, room); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -117,7 +117,7 @@ func TestAddRoomForParticipantSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.AddRoomForParticipant(ctx, mock.Anything, mock.Anything) ; err != nil {
+	if err := rr.AddRoomForParticipant(ctx, mock.Anything, mock.Anything); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -130,7 +130,7 @@ func TestAddRoomForParticipantsSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.AddRoomForParticipants(ctx, mock.Anything, []string{"userID1", "userID2"}) ; err != nil {
+	if err := rr.AddRoomForParticipants(ctx, mock.Anything, []string{"userID1", "userID2"}); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -144,7 +144,7 @@ func TestAddRoomForParticipantsFail(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(errors.New("Internal Error"))
 
-	if err := rr.AddRoomForParticipants(ctx, mock.Anything, []string{"userID1"}) ; err == nil {
+	if err := rr.AddRoomForParticipants(ctx, mock.Anything, []string{"userID1"}); err == nil {
 		t.Errorf("Actual no error, expected error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -159,7 +159,7 @@ func TestGetRoomsForSuccessNoMatches(t *testing.T) {
 
 	_, err := rr.GetRoomsFor(ctx, mock.Anything)
 
-	if  err != nil {
+	if err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -174,7 +174,7 @@ func TestGetRoomsForFail(t *testing.T) {
 
 	_, err := rr.GetRoomsFor(ctx, mock.Anything)
 
-	if  err == nil {
+	if err == nil {
 		t.Errorf("Actual no error, expected error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -187,7 +187,7 @@ func TestRemoveRoomForParticipantSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.RemoveRoomForParticipant(ctx, mock.Anything, mock.Anything) ; err != nil {
+	if err := rr.RemoveRoomForParticipant(ctx, mock.Anything, mock.Anything); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -200,7 +200,7 @@ func TestRemoveRoomForParticipantsSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "first1", "last1"}}) ; err != nil {
+	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "first1", "last1"}}); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -213,7 +213,7 @@ func TestRemoveRoomForParticipantsFail(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(errors.New("Internal Error"))
 
-	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "first1", "last1"}}) ; err == nil {
+	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "first1", "last1"}}); err == nil {
 		t.Errorf("Actual no error, expected error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -226,7 +226,7 @@ func TestSaveRoomAndAddRoomForAllParticipantsSuccess(t *testing.T) {
 	batchMock.On("AddBatchEntry", mock.Anything)
 	sessionMock.On("ExecuteBatch", batchMock).Return(nil)
 
-	if err := rr.SaveRoomAndAddRoomForAllParticipants(ctx, room) ; err != nil {
+	if err := rr.SaveRoomAndAddRoomForAllParticipants(ctx, room); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -239,7 +239,7 @@ func TestRemoveRoomForParticipantsAndDeleteRoomSuccess(t *testing.T) {
 	batchMock.On("AddBatchEntry", mock.Anything)
 	sessionMock.On("ExecuteBatch", batchMock).Return(nil)
 
-	if err := rr.RemoveRoomForParticipantsAndDeleteRoom(ctx, room) ; err != nil {
+	if err := rr.RemoveRoomForParticipantsAndDeleteRoom(ctx, room); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -252,7 +252,7 @@ func TestAddParticipantToRoomAndAddRoomForParticipantSuccess(t *testing.T) {
 	batchMock.On("AddBatchEntry", mock.Anything)
 	sessionMock.On("ExecuteBatch", batchMock).Return(nil)
 
-	if err := rr.AddParticipantToRoomAndAddRoomForParticipant(ctx, mock.Anything, mock.Anything) ; err != nil {
+	if err := rr.AddParticipantToRoomAndAddRoomForParticipant(ctx, mock.Anything, mock.Anything); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -265,7 +265,7 @@ func TestRemoveParticipantFromRoomAndRemoveRoomForParticipantSuccess(t *testing.
 	batchMock.On("AddBatchEntry", mock.Anything)
 	sessionMock.On("ExecuteBatch", batchMock).Return(nil)
 
-	if err := rr.RemoveParticipantFromRoomAndRemoveRoomForParticipant(ctx, mock.Anything, mock.Anything) ; err != nil {
+	if err := rr.RemoveParticipantFromRoomAndRemoveRoomForParticipant(ctx, mock.Anything, mock.Anything); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)

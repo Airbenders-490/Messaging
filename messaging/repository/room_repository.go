@@ -152,8 +152,8 @@ func (r RoomRepository) RemoveRoomForParticipantsAndDeleteRoom(ctx context.Conte
 	// RemoveRoomForParticipants for chat.student_rooms
 	for _, user := range room.Students {
 		batch.AddBatchEntry(&gocql.BatchEntry{
-					Stmt: removeRoomForParticipant,
-					Args: []interface{}{[1]string{room.RoomID}, user.ID},
+			Stmt: removeRoomForParticipant,
+			Args: []interface{}{[1]string{room.RoomID}, user.ID},
 		})
 	}
 	// DeleteRoom for chat.room
