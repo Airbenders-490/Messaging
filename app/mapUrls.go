@@ -24,4 +24,6 @@ func mapUrls(router *gin.Engine, mh *http.MessageHandler, rh *http.RoomHandler) 
 	router.DELETE("/rooms/:id/:roomID", rh.DeleteRoom)
 
 	router.GET("api/chat/:roomID", mh.LoadMessages)
+	router.PUT("api/chat/:roomID", mh.EditMessage)
+	router.DELETE("api/chat/:roomID", mh.DeleteMessage)
 }

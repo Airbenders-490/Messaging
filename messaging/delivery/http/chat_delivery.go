@@ -3,6 +3,7 @@ package http
 import (
 	"chat/domain"
 	"chat/utils/errors"
+	"chat/utils/httputils"
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,7 @@ var upgrader = websocket.Upgrader{
 
 type connection struct {
 	ws   *websocket.Conn
-	send chan domain.Message
+	send chan Event
 }
 
 type subscription struct {
@@ -30,12 +31,46 @@ type subscription struct {
 	userID string
 }
 
+type Event struct {
+	MessageType MessageType `json:"message_type"`
+	Message     domain.Message
+}
+
+type MessageType int
+
+const (
+	Send MessageType = iota
+	Edit
+	Delete
+)
+
+func NewSendEvent(message domain.Message) Event {
+	return Event{
+		MessageType: Send,
+		Message:     message,
+	}
+}
+
+func NewEditEvent(message domain.Message) Event {
+	return Event{
+		MessageType: Edit,
+		Message:     message,
+	}
+}
+
+func NewDeleteEvent(message domain.Message) Event {
+	return Event{
+		MessageType: Delete,
+		Message:     message,
+	}
+}
+
 // Hub is the heart of the chat app. This is what is used to hold "rooms", register and unregister when connecting and
 // disconnecting, and broadcast. Whenever a message is sent to broadcast channel, it is delivered to all the connections
 // in room
 type Hub struct {
 	rooms      map[string]map[subscription]bool
-	broadcast  chan domain.Message
+	broadcast  chan Event
 	Register   chan subscription
 	unregister chan subscription
 }
@@ -43,7 +78,7 @@ type Hub struct {
 // MainHub is the instantiation of our chat's heart
 // todo: make this a singleton
 var MainHub = Hub{
-	broadcast:  make(chan domain.Message),
+	broadcast:  make(chan Event),
 	Register:   make(chan subscription),
 	unregister: make(chan subscription),
 	rooms:      make(map[string]map[subscription]bool),
@@ -73,12 +108,12 @@ func (s *subscription) readPump(u domain.MessageUseCase) {
 			}
 			break
 		}
-		m := domain.Message{RoomID: s.roomID, SentTimestamp: time.Now(), FromStudentID: s.userID, MessageBody: string(msg)}
+		m := domain.Message{RoomID: s.roomID, SentTimestamp: time.Now().UTC(), FromStudentID: s.userID, MessageBody: string(msg)}
 		err = u.SaveMessage(context.Background(), &m)
 		if err != nil {
 			log.Printf("Failed to save message with err %s", err.Error())
 		}
-		MainHub.broadcast <- m
+		MainHub.broadcast <- NewSendEvent(m)
 	}
 }
 
@@ -131,7 +166,7 @@ func (h *MessageHandler) ServeWs(w http.ResponseWriter, r *http.Request, roomID 
 		log.Println(err.Error())
 		return
 	}
-	c := &connection{send: make(chan domain.Message), ws: ws}
+	c := &connection{send: make(chan Event), ws: ws}
 	s := subscription{c, roomID, userID}
 	if authorized {
 		MainHub.Register <- s
@@ -163,9 +198,9 @@ func (h *Hub) StartHubListener() {
 				}
 			}
 		case m := <-h.broadcast:
-			subscriptions := h.rooms[m.RoomID]
+			subscriptions := h.rooms[m.Message.RoomID]
 			for s := range subscriptions {
-				if m.FromStudentID == s.userID {
+				if m.Message.FromStudentID == s.userID {
 					continue
 				}
 				select {
@@ -174,7 +209,7 @@ func (h *Hub) StartHubListener() {
 					close(s.conn.send)
 					delete(subscriptions, s)
 					if len(subscriptions) == 0 {
-						delete(h.rooms, m.RoomID)
+						delete(h.rooms, m.Message.RoomID)
 					}
 				}
 			}
@@ -193,7 +228,7 @@ func NewMessageHandler(u domain.MessageUseCase) *MessageHandler {
 	return &MessageHandler{u: u}
 }
 
-func (h *MessageHandler) LoadMessages(c *gin.Context){
+func (h *MessageHandler) LoadMessages(c *gin.Context) {
 	room := c.Param("roomID")
 	queryLimit := c.Query("limit")
 	timestamp := c.Query("time")
@@ -201,9 +236,9 @@ func (h *MessageHandler) LoadMessages(c *gin.Context){
 	var sentTimestamp time.Time
 
 	test, err := strconv.ParseInt(queryLimit, 10, 64)
-	if err != nil || test < 1{
+	if err != nil || test < 1 {
 		limit = 10
-	}else {
+	} else {
 		limit = int(test)
 	}
 
@@ -221,8 +256,6 @@ func (h *MessageHandler) LoadMessages(c *gin.Context){
 	}
 
 	ctx := c.Request.Context()
-	//message := domain.Message{RoomID: room, SentTimestamp: sentTimestamp, FromStudentID: userID, MessageBody: string(msg)}
-	//msgs, err := h.u.EditMessage(ctx, room, sentTimestamp, limit)
 
 	msgs, err := h.u.GetMessages(ctx, room, sentTimestamp, limit)
 
@@ -232,4 +265,61 @@ func (h *MessageHandler) LoadMessages(c *gin.Context){
 	}
 
 	c.JSON(http.StatusOK, msgs)
+}
+
+func (h *MessageHandler) EditMessage(c *gin.Context) {
+	room := c.Param("roomID")
+
+	if room == "" {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Must provide room id"))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	var message domain.Message
+	err := c.ShouldBindJSON(&message)
+	if err != nil || message.FromStudentID == "" || message.RoomID == "" {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("invalid request body"))
+		return
+	}
+
+	editedMessage, err := h.u.EditMessage(ctx, message.RoomID, message.FromStudentID, message.SentTimestamp, message.MessageBody)
+	//  2022-01-27 20:39:13.543000+0000
+	if err != nil {
+		errors.SetRESTError(err, c)
+		return
+	}
+
+	MainHub.broadcast <- NewEditEvent(message)
+	c.JSON(http.StatusOK, editedMessage)
+}
+
+func (h *MessageHandler) DeleteMessage(c *gin.Context) {
+	room := c.Param("roomID")
+
+	if room == "" {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Must provide room id"))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	var message domain.Message
+	err := c.ShouldBindJSON(&message)
+	//if err != nil || message.FromStudentID == "" || message.SentTimestamp.IsZero() {
+	if err != nil || message.SentTimestamp.IsZero() { // todo: remove TEMPORARY
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("invalid request body"))
+		return
+	}
+
+	message.RoomID = room
+	err = h.u.DeleteMessage(ctx, message.RoomID, message.SentTimestamp)
+	if err != nil {
+		errors.SetRESTError(err, c)
+		return
+	}
+
+	MainHub.broadcast <- NewDeleteEvent(message)
+	c.JSON(http.StatusAccepted, httputils.NewResponse("message deleted"))
 }
