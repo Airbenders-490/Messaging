@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	insertMessage = `INSERT INTO messages (room_id, from_student_id, message_body, sent_timestamp) VALUES (?, ?, ?, ?)`
-	editMessage = `UPDATE messages SET message_body=? WHERE room_id=? AND sent_timestamp=? IF EXISTS;`
-	getMessage = `SELECT * FROM messages where room_id=? AND sent_timestamp =?`
-	getMessages = `SELECT * FROM messages WHERE room_id=? AND sent_timestamp <=? limit ?`
-	deleteMessage = `DELETE FROM messages WHERE room_id=? AND sent_timestamp=? IF EXISTS`
+	insertMessage = `INSERT INTO chat.messages (room_id, from_student_id, message_body, sent_timestamp) VALUES (?, ?, ?, ?)`
+	editMessage   = `UPDATE chat.messages SET message_body=? WHERE room_id=? AND sent_timestamp=? IF EXISTS;`
+	getMessage    = `SELECT * FROM chat.messages where room_id=? AND sent_timestamp =?`
+	getMessages   = `SELECT * FROM chat.messages WHERE room_id=? AND sent_timestamp <=? limit ?`
+	deleteMessage = `DELETE FROM chat.messages WHERE room_id=? AND sent_timestamp=? IF EXISTS`
 )
 
 type messageRepository struct {
@@ -35,15 +35,21 @@ func (m *messageRepository) SaveMessage(ctx context.Context, message *domain.Mes
 	return nil
 }
 
-func (m *messageRepository) EditMessage(ctx context.Context, message *domain.Message) (*domain.Message, error) {
+func (m *messageRepository) EditMessage(ctx context.Context, message *domain.Message) error {
 	var editedMsg domain.Message
 	applied, err := m.dbSession.Query(editMessage, message.MessageBody, message.RoomID, message.SentTimestamp).WithContext(ctx).
 		ScanCAS(&editedMsg.RoomID, &editedMsg.SentTimestamp, &editedMsg.FromStudentID, &editedMsg.MessageBody)
 
-	if applied == false || err != nil{
-		return nil, errors.NewInternalServerError(err.Error())
+	// todo: fix this
+	if applied == false || err != nil {
+		return errors.NewInternalServerError(err.Error())
 	}
-	return &editedMsg, nil
+
+	if editedMsg.RoomID != "" {
+		return errors.NewInternalServerError("Unable to save the message")
+	}
+
+	return nil
 }
 
 func (m *messageRepository) GetMessage(ctx context.Context, roomID string, timeStamp time.Time) (*domain.Message, error) {
@@ -51,7 +57,7 @@ func (m *messageRepository) GetMessage(ctx context.Context, roomID string, timeS
 
 	err := m.dbSession.Query(getMessage, roomID, timeStamp).WithContext(ctx).
 		Scan(&retrievedMsg.RoomID, &retrievedMsg.SentTimestamp, &retrievedMsg.FromStudentID, &retrievedMsg.MessageBody)
-	if err != nil{
+	if err != nil {
 		return nil, errors.NewInternalServerError(err.Error())
 	}
 
@@ -64,7 +70,7 @@ func (m *messageRepository) GetMessages(ctx context.Context, roomID string, time
 
 	scanner = m.dbSession.Query(getMessages, roomID, timeStamp, limit).WithContext(ctx).Iter().Scanner()
 
-	for scanner.Next(){
+	for scanner.Next() {
 		var msg domain.Message
 		err := scanner.Scan(&msg.RoomID, &msg.SentTimestamp, &msg.FromStudentID, &msg.MessageBody)
 
@@ -79,7 +85,6 @@ func (m *messageRepository) GetMessages(ctx context.Context, roomID string, time
 	}
 
 	return retrievedMessages, nil
-
 }
 
 func (m *messageRepository) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error {
