@@ -3,6 +3,7 @@ package app
 import (
 	"chat/messaging/delivery/http"
 	"chat/messaging/repository"
+	"chat/messaging/repository/cassandra"
 	"chat/messaging/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
@@ -28,7 +29,7 @@ func Start() {
 	log.Printf("Connected Cassandra database OK")
 
 	mr := repository.NewChatRepository(session)
-	rr := repository.NewRoomRepository(session)
+	rr := repository.NewRoomRepository(cassandra.NewSession(session))
 	sr := repository.NewStudentRepository(session)
 
 	mu := usecase.NewMessageUseCase(time.Second*2, mr, rr)
