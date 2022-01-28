@@ -22,6 +22,7 @@ func (u *messageUseCase) IsAuthorized(ctx context.Context, userID, roomID string
 	_, cancel := context.WithTimeout(context.Background(), u.timeout)
 	defer cancel()
 
+	//TODO Remove later
 	return true
 	studentChatRooms, err := u.roomRepository.GetRoomsFor(ctx, userID)
 	if err != nil {
@@ -49,8 +50,6 @@ func (u *messageUseCase) EditMessage(ctx context.Context, roomID string, userID 
 	c, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
-	//message.SentTimestamp, message.FromStudentID, message.RoomID = timeStamp, userID, roomID
-	//get existing message at timestamp
 	existingMessage, err := u.messageRepository.GetMessage(ctx, roomID, timeStamp)
 	if err != nil {
 		return nil, errors.NewNotFoundError("Message does not exist")
@@ -60,8 +59,12 @@ func (u *messageUseCase) EditMessage(ctx context.Context, roomID string, userID 
 		return nil, errors.NewUnauthorizedError("Users can only edit their own messages")
 	}
 
-	if message == "" || message == existingMessage.MessageBody {
-		return nil, errors.NewBadRequestError("Message body is the same or empty")
+	if message == existingMessage.MessageBody {
+		return existingMessage, nil
+	}
+
+	if message == ""  {
+		return nil, u.messageRepository.DeleteMessage(c, roomID, timeStamp)
 	}
 
 	existingMessage.MessageBody = message
@@ -78,19 +81,26 @@ func (u *messageUseCase) GetMessages(ctx context.Context, roomID string, timeSta
 	c, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
-	if retrievedMessages, err := u.messageRepository.GetMessages(c, roomID, timeStamp, limit); err != nil {
-		return nil, err
-	} else {
-		return retrievedMessages, nil
+	retrievedMessages, err := u.messageRepository.GetMessages(c, roomID, timeStamp, limit)
+
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
 	}
+	return retrievedMessages, nil
 }
-func (u *messageUseCase) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error {
+
+func (u *messageUseCase) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time, userID string) error {
 	c, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
-	if err := u.messageRepository.DeleteMessage(c, roomID, timeStamp); err != nil {
-		return err
+	existingMessage, err := u.messageRepository.GetMessage(ctx, roomID, timeStamp)
+	if err != nil {
+		return errors.NewNotFoundError("Message does not exist")
 	}
 
-	return nil
+	if userID != existingMessage.FromStudentID {
+		return errors.NewUnauthorizedError("Users can only delete their own messages")
+	}
+
+	return u.messageRepository.DeleteMessage(c, roomID, timeStamp)
 }

@@ -242,8 +242,7 @@ func (h *MessageHandler) LoadMessages(c *gin.Context) {
 		limit = int(test)
 	}
 
-	layout := "2006-01-02 15:04:05.000"
-	temp, err := time.Parse(layout, timestamp)
+	temp, err := time.Parse(time.RFC3339, timestamp)
 	if err != nil {
 		sentTimestamp = time.Now()
 	} else {
@@ -275,6 +274,9 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 		return
 	}
 
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
+
 	ctx := c.Request.Context()
 
 	var message domain.Message
@@ -284,8 +286,13 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 		return
 	}
 
+	if loggedID != message.FromStudentID {
+		c.JSON(http.StatusBadRequest, errors.NewUnauthorizedError("Can only edit your own messages"))
+		return
+	}
+
 	editedMessage, err := h.u.EditMessage(ctx, message.RoomID, message.FromStudentID, message.SentTimestamp, message.MessageBody)
-	//  2022-01-27 20:39:13.543000+0000
+
 	if err != nil {
 		errors.SetRESTError(err, c)
 		return
@@ -303,18 +310,27 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 		return
 	}
 
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
+
+
+
 	ctx := c.Request.Context()
 
 	var message domain.Message
 	err := c.ShouldBindJSON(&message)
-	//if err != nil || message.FromStudentID == "" || message.SentTimestamp.IsZero() {
-	if err != nil || message.SentTimestamp.IsZero() { // todo: remove TEMPORARY
+	if err != nil || message.FromStudentID == "" || message.SentTimestamp.IsZero() {
 		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("invalid request body"))
 		return
 	}
 
+	if loggedID != message.FromStudentID {
+		c.JSON(http.StatusBadRequest, errors.NewUnauthorizedError("Can only edit your own messages"))
+		return
+	}
+
 	message.RoomID = room
-	err = h.u.DeleteMessage(ctx, message.RoomID, message.SentTimestamp)
+	err = h.u.DeleteMessage(ctx, message.RoomID, message.SentTimestamp, message.FromStudentID)
 	if err != nil {
 		errors.SetRESTError(err, c)
 		return
