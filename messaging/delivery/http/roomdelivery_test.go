@@ -18,8 +18,6 @@ import (
 	"testing"
 )
 
-//var roomUsecaseMock = &mocks.RoomUseCase{}
-//var rh = *NewRoomHandler(roomUsecaseMock)
 var mockRoom domain.ChatRoom
 var mockRoomUseCase = new(mocks.RoomUseCase)
 var rh = NewRoomHandler(mockRoomUseCase)
@@ -89,7 +87,6 @@ func TestSaveRoom(t *testing.T) {
 }
 
 func TestAddUserToRoom(t *testing.T) {
-
 	router := gin.Default()
 	router.PUT("/rooms/add/:roomID/:id", rh.AddUserToRoom)
 	server := httptest.NewServer(router)
@@ -137,7 +134,6 @@ func TestAddUserToRoom(t *testing.T) {
 }
 
 func TestRemoveUserFromRoom(t *testing.T) {
-
 	router := gin.Default()
 	router.PUT("/rooms/remove/:roomID/:id", rh.RemoveUserFromRoom)
 	server := httptest.NewServer(router)
