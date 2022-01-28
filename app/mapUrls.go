@@ -7,8 +7,9 @@ import (
 	"strconv"
 )
 
-func mapUrls(router *gin.Engine, mh *http.MessageHandler, rh *http.RoomHandler) {
+func mapUrls(mw Middleware, router *gin.Engine, mh *http.MessageHandler, rh *http.RoomHandler) {
 
+	router.Use(mw.AuthMiddleware())
 	router.GET("/chat/:roomID", func(c *gin.Context) {
 		roomID := c.Param("roomID")
 		// todo: get this from jwt token

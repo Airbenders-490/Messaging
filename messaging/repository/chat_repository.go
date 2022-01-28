@@ -12,7 +12,7 @@ const (
 	insertMessage = `INSERT INTO chat.messages (room_id, from_student_id, message_body, sent_timestamp) VALUES (?, ?, ?, ?)`
 	editMessage   = `UPDATE chat.messages SET message_body=? WHERE room_id=? AND sent_timestamp=? IF EXISTS;`
 	getMessage    = `SELECT * FROM chat.messages where room_id=? AND sent_timestamp =?`
-	getMessages   = `SELECT * FROM chat.messages WHERE room_id=? AND sent_timestamp <=? limit ?`
+	getMessages   = `SELECT * FROM chat.messages WHERE room_id=? AND sent_timestamp <? limit ?`
 	deleteMessage = `DELETE FROM chat.messages WHERE room_id=? AND sent_timestamp=? IF EXISTS`
 )
 
@@ -30,19 +30,18 @@ func NewChatRepository(session *gocql.Session) domain.MessageRepository {
 func (m *messageRepository) SaveMessage(ctx context.Context, message *domain.Message) error {
 	err := m.dbSession.Query(insertMessage, message.RoomID, message.FromStudentID, message.MessageBody, message.SentTimestamp).WithContext(ctx).Exec()
 	if err != nil {
-		return errors.NewInternalServerError(err.Error())
+		return err
 	}
 	return nil
 }
 
 func (m *messageRepository) EditMessage(ctx context.Context, message *domain.Message) error {
 	var editedMsg domain.Message
-	applied, err := m.dbSession.Query(editMessage, message.MessageBody, message.RoomID, message.SentTimestamp).WithContext(ctx).
+	_, err := m.dbSession.Query(editMessage, message.MessageBody, message.RoomID, message.SentTimestamp).WithContext(ctx).
 		ScanCAS(&editedMsg.RoomID, &editedMsg.SentTimestamp, &editedMsg.FromStudentID, &editedMsg.MessageBody)
 
-	// todo: fix this
-	if applied == false || err != nil {
-		return errors.NewInternalServerError(err.Error())
+	if err != nil {
+		return err
 	}
 
 	if editedMsg.RoomID != "" {
@@ -58,7 +57,7 @@ func (m *messageRepository) GetMessage(ctx context.Context, roomID string, timeS
 	err := m.dbSession.Query(getMessage, roomID, timeStamp).WithContext(ctx).
 		Scan(&retrievedMsg.RoomID, &retrievedMsg.SentTimestamp, &retrievedMsg.FromStudentID, &retrievedMsg.MessageBody)
 	if err != nil {
-		return nil, errors.NewInternalServerError(err.Error())
+		return nil, err
 	}
 
 	return &retrievedMsg, err
@@ -75,13 +74,13 @@ func (m *messageRepository) GetMessages(ctx context.Context, roomID string, time
 		err := scanner.Scan(&msg.RoomID, &msg.SentTimestamp, &msg.FromStudentID, &msg.MessageBody)
 
 		if err != nil {
-			return nil, errors.NewInternalServerError(err.Error())
+			return nil, err
 		}
 		retrievedMessages = append(retrievedMessages, msg)
 
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, errors.NewInternalServerError(err.Error())
+		return nil, err
 	}
 
 	return retrievedMessages, nil
@@ -91,7 +90,7 @@ func (m *messageRepository) DeleteMessage(ctx context.Context, roomID string, ti
 	err := m.dbSession.Query(deleteMessage, roomID, timeStamp).WithContext(ctx).Exec()
 
 	if err != nil {
-		return errors.NewInternalServerError(err.Error())
+		return err
 	}
 
 	return nil
