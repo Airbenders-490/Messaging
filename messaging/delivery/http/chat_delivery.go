@@ -133,10 +133,10 @@ func (s *subscription) writePump() {
 			}
 			res, err := json.Marshal(message)
 			if err != nil {
-				log.Printf("message %s couldn't be sent to %s in room %s.", message, s.userID, s.roomID)
+				log.Printf("message %s couldn't be sent to %s in room %s.", message.Message, s.userID, s.roomID)
 			}
 			if err = c.write(websocket.TextMessage, res); err != nil {
-				log.Printf("message %s couldn't be sent to %s in room %s.", message, s.userID, s.roomID)
+				log.Printf("message %s couldn't be sent to %s in room %s.", message.Message, s.userID, s.roomID)
 				return
 			}
 		case <-ticker.C:
