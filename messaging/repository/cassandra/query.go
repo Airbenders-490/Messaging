@@ -19,6 +19,11 @@ type QueryInterface interface {
 
 	// WithContext returns a QueryInterface for the QueryInterface.
 	WithContext(ctx context.Context) QueryInterface
+
+	// ScanCas returns a boolean and an error for the QueryInterface
+	ScanCAS(...interface{}) (bool, error)
+
+	Iter() IterInterface
 }
 
 // Query is a wrapper for a query for mockability.
@@ -53,4 +58,12 @@ func (q *Query) Scan(dest ...interface{}) error {
 func (q *Query) WithContext(ctx context.Context) QueryInterface {
 	q.query.WithContext(ctx)
 	return q
+}
+
+func (q *Query) ScanCAS(dest ...interface{}) (bool, error) {
+	return q.query.ScanCAS(dest...)
+}
+
+func (q *Query) Iter() IterInterface {
+	return NewIter(q.query.Iter())
 }

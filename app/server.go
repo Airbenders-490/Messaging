@@ -28,7 +28,7 @@ func Start() {
 	}
 	log.Printf("Connected Cassandra database OK")
 
-	mr := repository.NewChatRepository(session)
+	mr := repository.NewChatRepository(cassandra.NewSession(session))
 	rr := repository.NewRoomRepository(cassandra.NewSession(session))
 	sr := repository.NewStudentRepository(session)
 
