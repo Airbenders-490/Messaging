@@ -313,8 +313,6 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	key, _ := c.Get("loggedID")
 	loggedID, _ := key.(string)
 
-
-
 	ctx := c.Request.Context()
 
 	var message domain.Message

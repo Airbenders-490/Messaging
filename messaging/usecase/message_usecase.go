@@ -63,7 +63,7 @@ func (u *messageUseCase) EditMessage(ctx context.Context, roomID string, userID 
 		return existingMessage, nil
 	}
 
-	if message == ""  {
+	if message == "" {
 		return nil, u.messageRepository.DeleteMessage(c, roomID, timeStamp)
 	}
 
