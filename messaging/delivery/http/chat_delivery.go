@@ -6,7 +6,6 @@ import (
 	"chat/utils/httputils"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"io"
@@ -162,7 +161,6 @@ func (h *MessageHandler) ServeWs(w http.ResponseWriter, r *http.Request, roomID 
 		io.WriteString(w, "Not authorized to enter the room number "+roomID)
 		return
 	}
-	fmt.Println("helloooo")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err.Error())
@@ -233,22 +231,13 @@ func NewMessageHandler(u domain.MessageUseCase) *MessageHandler {
 func (h *MessageHandler) LoadMessages(c *gin.Context) {
 	room := c.Param("roomID")
 	queryLimit := c.Query("limit")
-	timestamp := c.Query("time")
 	var limit int
-	var sentTimestamp time.Time
 
-	test, err := strconv.ParseInt(queryLimit, 10, 64)
-	if err != nil || test < 1 {
+	i, err := strconv.ParseInt(queryLimit, 10, 64)
+	if err != nil || i < 1 {
 		limit = 10
 	} else {
-		limit = int(test)
-	}
-
-	temp, err := time.Parse(time.RFC3339, timestamp)
-	if err != nil {
-		sentTimestamp = time.Now()
-	} else {
-		sentTimestamp = temp
+		limit = int(i)
 	}
 
 	if room == "" {
@@ -256,12 +245,19 @@ func (h *MessageHandler) LoadMessages(c *gin.Context) {
 		return
 	}
 
+	var message domain.Message
+	err = c.ShouldBindJSON(&message)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("invalid request body"))
+		return
+	}
+
 	ctx := c.Request.Context()
 
-	msgs, err := h.u.GetMessages(ctx, room, sentTimestamp, limit)
+	msgs, err := h.u.GetMessages(ctx, room, message.SentTimestamp, limit)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errors.NewInternalServerError(err.Error()))
+		errors.SetRESTError(err, c)
 		return
 	}
 
@@ -289,7 +285,7 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 	}
 
 	if loggedID != message.FromStudentID {
-		c.JSON(http.StatusBadRequest, errors.NewUnauthorizedError("Can only edit your own messages"))
+		c.JSON(http.StatusUnauthorized, errors.NewUnauthorizedError("Can only edit your own messages"))
 		return
 	}
 
@@ -325,7 +321,7 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	}
 
 	if loggedID != message.FromStudentID {
-		c.JSON(http.StatusBadRequest, errors.NewUnauthorizedError("Can only edit your own messages"))
+		c.JSON(http.StatusUnauthorized, errors.NewUnauthorizedError("Can only edit your own messages"))
 		return
 	}
 
