@@ -8,8 +8,6 @@ import (
 )
 
 func mapUrls(mw Middleware, router *gin.Engine, mh *http.MessageHandler, rh *http.RoomHandler) {
-
-	router.Use(mw.AuthMiddleware())
 	router.GET("/chat/:roomID", func(c *gin.Context) {
 		roomID := c.Param("roomID")
 		// todo: get this from jwt token
@@ -17,7 +15,7 @@ func mapUrls(mw Middleware, router *gin.Engine, mh *http.MessageHandler, rh *htt
 		ctx := c.Request.Context()
 		mh.ServeWs(c.Writer, c.Request, roomID, userID, ctx)
 	})
-
+	router.Use(mw.AuthMiddleware())
 	router.POST("/rooms", rh.SaveRoom)
 	router.GET("/rooms/:id", rh.GetChatRoomsFor)
 	router.PUT("/rooms/add/:roomID/:id", rh.AddUserToRoom)
