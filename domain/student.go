@@ -13,11 +13,14 @@ type Student struct {
 type StudentRepository interface {
 	SaveStudent(ctx context.Context, student *Student) error
 	GetStudent(ctx context.Context, studentID string) (*Student, error)
+	EditStudent(ctx context.Context, student *Student) error
+	DeleteStudent(ctx context.Context, id string) error
 }
 
 // StudentUseCase implements the contract for student functionalities. GetStudent is used by the app, but
 // ListenAndSyncStudentRecord is used to sync the data from the profile service
 type StudentUseCase interface {
-	GetStudent(ctx context.Context, studentID string) (*Student, error)
-	ListenAndSyncStudentRecord(ctx context.Context, student *Student) error
+	ListenStudentCreation()
+	ListenStudentEdit()
+	ListenStudentDelete()
 }
