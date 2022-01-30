@@ -57,8 +57,9 @@ func NewUnauthorizedError(message string) *RestError {
 
 func SetRESTError(err error, c *gin.Context) {
 	switch v := err.(type) {
-	case RestError:
+	case *RestError:
 		c.JSON(v.Code, v)
+		return
 	default:
 		c.JSON(http.StatusInternalServerError, NewInternalServerError(err.Error()))
 	}
