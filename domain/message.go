@@ -17,15 +17,16 @@ type Message struct {
 type MessageRepository interface {
 	SaveMessage(ctx context.Context, message *Message) error
 	EditMessage(ctx context.Context, message *Message) error
-	GetMessages(ctx context.Context, roomID string, timeStamp time.Time) ([]Message, error)
+	GetMessage(ctx context.Context, roomID string, timeStamp time.Time) (*Message, error)
+	GetMessages(ctx context.Context, roomID string, timeStamp time.Time, limit int) ([]Message, error)
 	DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error
 }
 
 // MessageUseCase defines the functionality messages encapsulate
 type MessageUseCase interface {
 	SaveMessage(ctx context.Context, message *Message) error
-	EditMessage(ctx context.Context, userID string, message *Message) error
-	GetMessages(ctx context.Context, roomID string, timeStamp time.Time) ([]Message, error)
-	DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error
+	EditMessage(ctx context.Context, roomID string, userID string, timeStamp time.Time, message string) (*Message, error)
+	GetMessages(ctx context.Context, roomID string, timeStamp time.Time, limit int) ([]Message, error)
+	DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time, userID string) error
 	IsAuthorized(ctx context.Context, userID, roomID string) bool
 }

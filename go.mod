@@ -9,10 +9,8 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/maraino/go-mock v0.0.0-20180321183845-4c74c434cd3a
 	github.com/stretchr/testify v1.4.0
-)
-
-require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
@@ -29,6 +27,7 @@ require (
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.1.1 // indirect
+	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/vektra/mockery v1.1.2 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect

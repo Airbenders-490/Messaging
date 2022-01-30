@@ -12,9 +12,9 @@ import (
 	"time"
 )
 
-func Server(mh *http.MessageHandler, rh *http.RoomHandler) *gin.Engine {
+func Server(mh *http.MessageHandler, rh *http.RoomHandler, mw Middleware) *gin.Engine {
 	router := gin.Default()
-	mapUrls(router, mh, rh)
+	mapUrls(mw, router, mh, rh)
 	return router
 }
 
@@ -38,7 +38,9 @@ func Start() {
 	ru := usecase.NewRoomUseCase(rr, sr, time.Second*2)
 	rh := http.NewRoomHandler(ru)
 
+	mw := NewMiddleware()
+
 	go http.MainHub.StartHubListener()
-	router := Server(mh, rh)
+	router := Server(mh, rh, mw)
 	router.Run()
 }
