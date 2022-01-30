@@ -83,8 +83,14 @@ func (u *roomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*doma
 		var room *domain.ChatRoom
 		var student *domain.Student
 		room, err = u.rr.GetRoom(ctx, Room.RoomID)
-
+		if err != nil {
+			return nil, err
+		}
 		student, err = u.sr.GetStudent(ctx, room.Admin.ID)
+		if err != nil {
+			return nil, err
+		}
+
 		room.Admin.LastName = student.LastName
 		room.Admin.FirstName = student.FirstName
 
