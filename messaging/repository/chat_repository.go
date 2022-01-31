@@ -2,9 +2,9 @@ package repository
 
 import (
 	"chat/domain"
+	"chat/messaging/repository/cassandra"
 	"chat/utils/errors"
 	"context"
-	"github.com/gocql/gocql"
 	"time"
 )
 
@@ -16,42 +16,42 @@ const (
 	deleteMessage = `DELETE FROM chat.messages WHERE room_id=? AND sent_timestamp=? IF EXISTS`
 )
 
-type messageRepository struct {
-	dbSession *gocql.Session
+type MessageRepository struct {
+	dbSession cassandra.SessionInterface
 }
 
 // NewChatRepository is the constructor
-func NewChatRepository(session *gocql.Session) domain.MessageRepository {
-	return &messageRepository{
+func NewChatRepository(session cassandra.SessionInterface) *MessageRepository {
+	return &MessageRepository{
 		dbSession: session,
 	}
 }
 
-func (m *messageRepository) SaveMessage(ctx context.Context, message *domain.Message) error {
-	err := m.dbSession.Query(insertMessage, message.RoomID, message.FromStudentID, message.MessageBody, message.SentTimestamp).WithContext(ctx).Exec()
-	if err != nil {
-		return err
-	}
-	return nil
+func (m *MessageRepository) SaveMessage(ctx context.Context, message *domain.Message) error {
+	return m.dbSession.Query(insertMessage, message.RoomID, message.FromStudentID, message.MessageBody, message.SentTimestamp).WithContext(ctx).Exec()
+	//if err != nil {
+	//	return err
+	//}
+	//return nil
 }
 
-func (m *messageRepository) EditMessage(ctx context.Context, message *domain.Message) error {
+func (m *MessageRepository) EditMessage(ctx context.Context, message *domain.Message) error {
 	var editedMsg domain.Message
-	_, err := m.dbSession.Query(editMessage, message.MessageBody, message.RoomID, message.SentTimestamp).WithContext(ctx).
+	applied, err := m.dbSession.Query(editMessage, message.MessageBody, message.RoomID, message.SentTimestamp).WithContext(ctx).
 		ScanCAS(&editedMsg.RoomID, &editedMsg.SentTimestamp, &editedMsg.FromStudentID, &editedMsg.MessageBody)
 
 	if err != nil {
 		return err
 	}
 
-	if editedMsg.RoomID != "" {
+	if !applied {
 		return errors.NewInternalServerError("Unable to save the message")
 	}
 
 	return nil
 }
 
-func (m *messageRepository) GetMessage(ctx context.Context, roomID string, timeStamp time.Time) (*domain.Message, error) {
+func (m *MessageRepository) GetMessage(ctx context.Context, roomID string, timeStamp time.Time) (*domain.Message, error) {
 	var retrievedMsg domain.Message
 
 	err := m.dbSession.Query(getMessage, roomID, timeStamp).WithContext(ctx).
@@ -63,9 +63,9 @@ func (m *messageRepository) GetMessage(ctx context.Context, roomID string, timeS
 	return &retrievedMsg, err
 }
 
-func (m *messageRepository) GetMessages(ctx context.Context, roomID string, timeStamp time.Time, limit int) ([]domain.Message, error) {
+func (m *MessageRepository) GetMessages(ctx context.Context, roomID string, timeStamp time.Time, limit int) ([]domain.Message, error) {
 	var retrievedMessages []domain.Message
-	var scanner gocql.Scanner
+	var scanner cassandra.ScannerInterface
 
 	scanner = m.dbSession.Query(getMessages, roomID, timeStamp, limit).WithContext(ctx).Iter().Scanner()
 
@@ -86,12 +86,12 @@ func (m *messageRepository) GetMessages(ctx context.Context, roomID string, time
 	return retrievedMessages, nil
 }
 
-func (m *messageRepository) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error {
-	err := m.dbSession.Query(deleteMessage, roomID, timeStamp).WithContext(ctx).Exec()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (m *MessageRepository) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error {
+	return m.dbSession.Query(deleteMessage, roomID, timeStamp).WithContext(ctx).Exec()
+	//
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//return nil
 }

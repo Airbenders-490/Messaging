@@ -2,15 +2,16 @@ package repository
 
 import (
 	"chat/domain"
+	"chat/messaging/repository/cassandra"
 	"context"
 	"github.com/gocql/gocql"
 )
 
 type StudentRepository struct {
-	dbSession *gocql.Session
+	dbSession cassandra.SessionInterface
 }
 
-func NewStudentRepository(session *gocql.Session) *StudentRepository {
+func NewStudentRepository(session cassandra.SessionInterface) *StudentRepository {
 	return &StudentRepository{
 		dbSession: session,
 	}
