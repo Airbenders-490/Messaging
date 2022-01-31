@@ -4,4 +4,4 @@
 out
 
 # Output of the go coverage tool
-.out
+*.out
