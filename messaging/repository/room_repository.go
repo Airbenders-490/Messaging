@@ -2,16 +2,16 @@ package repository
 
 import (
 	"chat/domain"
+	"chat/messaging/repository/cassandra"
 	"context"
 	"github.com/gocql/gocql"
-	"strings"
 )
 
 type RoomRepository struct {
-	dbSession *gocql.Session
+	dbSession cassandra.SessionInterface
 }
 
-func NewRoomRepository(session *gocql.Session) *RoomRepository {
+func NewRoomRepository(session cassandra.SessionInterface) *RoomRepository {
 	return &RoomRepository{
 		dbSession: session,
 	}
@@ -94,9 +94,10 @@ func (r RoomRepository) GetRoomsFor(ctx context.Context, userID string) (*domain
 		return nil, err
 	}
 
-	roomsIDSplit := strings.Split(roomsID[0], ",")
-	for _, ID := range roomsIDSplit {
-		ID = strings.ReplaceAll(ID, " ", "")
+	if len(roomsID) == 0 {
+		return &StudentRoom, nil
+	}
+	for _, ID := range roomsID {
 		var room domain.ChatRoom
 		room.RoomID = ID
 		rooms = append(rooms, room)
@@ -123,21 +124,21 @@ func (r RoomRepository) RemoveRoomForParticipants(ctx context.Context, roomID st
 }
 
 func (r RoomRepository) SaveRoomAndAddRoomForAllParticipants(ctx context.Context, room *domain.ChatRoom) error {
-	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
+	batch := r.dbSession.NewBatch(cassandra.BatchUnlogged).WithContext(ctx)
 
 	var userIDArr []string
 	for _, user := range room.Students {
 		userIDArr = append(userIDArr, user.ID)
 	}
 	// SaveRoom for chat.room
-	batch.Entries = append(batch.Entries, gocql.BatchEntry{
+	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: saveRoom,
 		Args: []interface{}{room.RoomID, room.Name, room.Admin.ID, userIDArr},
 	})
 
 	// AddRoomForAllParticipants for chat.student_rooms
 	for _, user := range room.Students {
-		batch.Entries = append(batch.Entries, gocql.BatchEntry{
+		batch.AddBatchEntry(&gocql.BatchEntry{
 			Stmt: addRoomForParticipant,
 			Args: []interface{}{[1]string{room.RoomID}, user.ID},
 		})
@@ -146,17 +147,17 @@ func (r RoomRepository) SaveRoomAndAddRoomForAllParticipants(ctx context.Context
 }
 
 func (r RoomRepository) RemoveRoomForParticipantsAndDeleteRoom(ctx context.Context, room *domain.ChatRoom) error {
-	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
+	batch := r.dbSession.NewBatch(cassandra.BatchUnlogged).WithContext(ctx)
 
 	// RemoveRoomForParticipants for chat.student_rooms
 	for _, user := range room.Students {
-		batch.Entries = append(batch.Entries, gocql.BatchEntry{
+		batch.AddBatchEntry(&gocql.BatchEntry{
 			Stmt: removeRoomForParticipant,
 			Args: []interface{}{[1]string{room.RoomID}, user.ID},
 		})
 	}
 	// DeleteRoom for chat.room
-	batch.Entries = append(batch.Entries, gocql.BatchEntry{
+	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: deleteRoom,
 		Args: []interface{}{room.RoomID},
 	})
@@ -164,12 +165,12 @@ func (r RoomRepository) RemoveRoomForParticipantsAndDeleteRoom(ctx context.Conte
 }
 
 func (r RoomRepository) AddParticipantToRoomAndAddRoomForParticipant(ctx context.Context, roomID string, userID string) error {
-	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
-	batch.Entries = append(batch.Entries, gocql.BatchEntry{
+	batch := r.dbSession.NewBatch(cassandra.BatchUnlogged).WithContext(ctx)
+	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: addParticipantToRoom,
 		Args: []interface{}{[1]string{userID}, roomID},
 	})
-	batch.Entries = append(batch.Entries, gocql.BatchEntry{
+	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: addRoomForParticipant,
 		Args: []interface{}{[1]string{roomID}, userID},
 	})
@@ -177,12 +178,12 @@ func (r RoomRepository) AddParticipantToRoomAndAddRoomForParticipant(ctx context
 }
 
 func (r RoomRepository) RemoveParticipantFromRoomAndRemoveRoomForParticipant(ctx context.Context, roomID string, userID string) error {
-	batch := r.dbSession.NewBatch(gocql.UnloggedBatch).WithContext(ctx)
-	batch.Entries = append(batch.Entries, gocql.BatchEntry{
+	batch := r.dbSession.NewBatch(cassandra.BatchUnlogged).WithContext(ctx)
+	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: removeParticipantFromRoom,
 		Args: []interface{}{[1]string{userID}, roomID},
 	})
-	batch.Entries = append(batch.Entries, gocql.BatchEntry{
+	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: removeRoomForParticipant,
 		Args: []interface{}{[1]string{roomID}, userID},
 	})
