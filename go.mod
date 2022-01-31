@@ -11,6 +11,9 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/sony/gobreaker v0.5.0
 	github.com/stretchr/testify v1.4.0
+)
+
+require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
