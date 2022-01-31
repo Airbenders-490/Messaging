@@ -39,10 +39,6 @@ func (h *RoomHandler) SaveRoom(c *gin.Context) {
 func (h *RoomHandler) AddUserToRoom(c *gin.Context) {
 	userID := c.Params.ByName("id")
 	roomID := c.Params.ByName("roomID")
-	if userID == "" || roomID == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("userID AND roomID parameters must be provided"))
-		return
-	}
 
 	ctx := c.Request.Context()
 	err := h.u.AddUserToRoom(ctx, roomID, userID)
@@ -57,10 +53,6 @@ func (h *RoomHandler) AddUserToRoom(c *gin.Context) {
 func (h *RoomHandler) RemoveUserFromRoom(c *gin.Context) {
 	userID := c.Params.ByName("id")
 	roomID := c.Params.ByName("roomID")
-	if userID == "" || roomID == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("userID AND roomID parameters must be provided"))
-		return
-	}
 
 	ctx := c.Request.Context()
 	err := h.u.RemoveUserFromRoom(ctx, roomID, userID)
@@ -74,10 +66,6 @@ func (h *RoomHandler) RemoveUserFromRoom(c *gin.Context) {
 
 func (h *RoomHandler) GetChatRoomsFor(c *gin.Context) {
 	userID := c.Params.ByName("id")
-	if userID == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("userID parameter must be provided"))
-		return
-	}
 
 	ctx := c.Request.Context()
 	studentChatRooms, err := h.u.GetChatRoomsFor(ctx, userID)
@@ -92,10 +80,6 @@ func (h *RoomHandler) GetChatRoomsFor(c *gin.Context) {
 func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 	userID := c.Params.ByName("id")
 	roomID := c.Params.ByName("roomID")
-	if userID == "" || roomID == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("userID AND roomID parameters must be provided"))
-		return
-	}
 
 	ctx := c.Request.Context()
 	err := h.u.DeleteRoom(ctx, userID, roomID)
