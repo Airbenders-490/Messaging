@@ -9,7 +9,6 @@ require (
 	github.com/gocql/gocql v0.0.0-20211015133455-b225f9b53fa1
 	github.com/gorilla/websocket v1.4.2
 	github.com/joho/godotenv v1.4.0
-	github.com/sony/gobreaker v0.5.0
 	github.com/stretchr/testify v1.4.0
 )
 
@@ -30,7 +29,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
-	github.com/vektra/mockery v1.1.2 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	golang.org/x/sys v0.0.0-20200116001909-b77594299b42 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
