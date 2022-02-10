@@ -26,8 +26,11 @@ func resetRoomUsecaseTestFields() {
 	faker.FakeData(&mockStudentChatRoom)
 }
 
+const caseSuccess = "case success"
+const caseErrorInRepo = "case error in repo"
+
 func TestSaveRoom(t *testing.T) {
-	t.Run("case success", func(t *testing.T) {
+	t.Run(caseSuccess, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 		mockRoomRepo.On("GetRoom",mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
@@ -68,7 +71,7 @@ func TestSaveRoom(t *testing.T) {
 		mockRoomRepo.AssertExpectations(t)
 	})
 
-	t.Run("case error in repo", func(t *testing.T) {
+	t.Run(caseErrorInRepo, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 		mockRoomRepo.On("GetRoom",mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
@@ -86,7 +89,7 @@ func TestSaveRoom(t *testing.T) {
 
 func TestAddUserToRoom(t *testing.T) {
 
-	t.Run("case success", func(t *testing.T) {
+	t.Run(caseSuccess, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 		mockRoomRepo.On("AddParticipantToRoomAndAddRoomForParticipant",mock.Anything,mock.AnythingOfType("string"),mock.AnythingOfType("string")).
 			Return(nil).Once()
@@ -96,7 +99,7 @@ func TestAddUserToRoom(t *testing.T) {
 		mockRoomRepo.AssertExpectations(t)
 
 	})
-	t.Run("case error in repo", func(t *testing.T) {
+	t.Run(caseErrorInRepo, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 		mockRoomRepo.On("AddParticipantToRoomAndAddRoomForParticipant",mock.Anything,mock.AnythingOfType("string"),mock.AnythingOfType("string")).
 			Return(errors.New("error")).Once()
@@ -109,7 +112,7 @@ func TestAddUserToRoom(t *testing.T) {
 
 func TestRemoveUserFromRoom(t *testing.T) {
 
-	t.Run("case success", func(t *testing.T) {
+	t.Run(caseSuccess, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 		mockRoomRepo.On("RemoveParticipantFromRoomAndRemoveRoomForParticipant",mock.Anything,mock.AnythingOfType("string"),mock.AnythingOfType("string")).
 			Return(nil).Once()
@@ -120,7 +123,7 @@ func TestRemoveUserFromRoom(t *testing.T) {
 
 	})
 
-	t.Run("case error in repo", func(t *testing.T) {
+	t.Run(caseErrorInRepo, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 		mockRoomRepo.On("RemoveParticipantFromRoomAndRemoveRoomForParticipant",mock.Anything,mock.AnythingOfType("string"),mock.AnythingOfType("string")).
 			Return(errors.New("error")).Once()
@@ -210,7 +213,7 @@ func TestGetChatRoomsFor(t *testing.T) {
 		mockRoomRepo.AssertExpectations(t)
 	})
 
-	t.Run("case success", func(t *testing.T) {
+	t.Run(caseSuccess, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 		mockStudentRepo.On("GetStudent",mock.Anything,mock.AnythingOfType("string")).
 			Return(&mockStudent,nil).Once()
@@ -275,7 +278,7 @@ func TestDeleteRoom(t *testing.T) {
 
 	})
 
-	t.Run("case success", func(t *testing.T) {
+	t.Run(caseSuccess, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 
 		mockRoomRepo.On("GetRoom", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).

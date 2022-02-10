@@ -22,6 +22,8 @@ var mockRoom domain.ChatRoom
 var mockRoomUseCase = new(mocks.RoomUseCase)
 var rh = NewRoomHandler(mockRoomUseCase)
 var contentType = "application/json"
+const postRoomPath = "%s/rooms"
+const readFailureMessage = "failed to read from message"
 
 func TestSaveRoom(t *testing.T) {
 	err := faker.FakeData(&mockRoom)
@@ -40,27 +42,27 @@ func TestSaveRoom(t *testing.T) {
 		postBody, err := json.Marshal(mockRoom)
 		assert.NoError(t, err)
 		reader := strings.NewReader(string(postBody))
-		response, err := server.Client().Post(fmt.Sprintf("%s/rooms", server.URL), contentType, reader)
+		response, err := server.Client().Post(fmt.Sprintf(postRoomPath, server.URL), contentType, reader)
 		assert.NoError(t, err)
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusCreated, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})
 
 	t.Run("Fail: Invalid request body format", func(t *testing.T) {
-		response, err := server.Client().Post(fmt.Sprintf("%s/rooms", server.URL), contentType, nil)
+		response, err := server.Client().Post(fmt.Sprintf(postRoomPath, server.URL), contentType, nil)
 		assert.NoError(t, err)
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 	})
 
@@ -73,14 +75,14 @@ func TestSaveRoom(t *testing.T) {
 		postBody, err := json.Marshal(mockRoom)
 		assert.NoError(t, err)
 		reader := strings.NewReader(string(postBody))
-		response, err := server.Client().Post(fmt.Sprintf("%s/rooms", server.URL), contentType, reader)
+		response, err := server.Client().Post(fmt.Sprintf(postRoomPath, server.URL), contentType, reader)
 		assert.NoError(t, err)
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})
@@ -107,7 +109,7 @@ func TestAddUserToRoom(t *testing.T) {
 		assert.Equal(t, http.StatusAccepted, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})
@@ -127,7 +129,7 @@ func TestAddUserToRoom(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})
@@ -154,7 +156,7 @@ func TestRemoveUserFromRoom(t *testing.T) {
 		assert.Equal(t, http.StatusAccepted, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})
@@ -174,7 +176,7 @@ func TestRemoveUserFromRoom(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})
@@ -200,7 +202,7 @@ func TestGetChatRoomsFor(t *testing.T) {
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})
@@ -218,7 +220,7 @@ func TestGetChatRoomsFor(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})
@@ -245,7 +247,7 @@ func TestDeleteRoom(t *testing.T) {
 		assert.Equal(t, http.StatusAccepted, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})
@@ -265,7 +267,7 @@ func TestDeleteRoom(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 		_, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			assert.Fail(t, "failed to read from message")
+			assert.Fail(t, readFailureMessage)
 		}
 		mockRoomUseCase.AssertExpectations(t)
 	})

@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const messageType = "*domain.Message"
+
 func TestSaveMessage(t *testing.T) {
 	t.Parallel()
 	mockMessageRepository := new(mocks.MessageRepository)
@@ -19,9 +21,10 @@ func TestSaveMessage(t *testing.T) {
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil)
+
 	t.Run("success", func(t *testing.T) {
 		mockMessageRepository.
-			On("SaveMessage", mock.Anything, mock.AnythingOfType("*domain.Message")).
+			On("SaveMessage", mock.Anything, mock.AnythingOfType(messageType)).
 			Return(nil).Once()
 
 		err := u.SaveMessage(context.TODO(), &mockMessage)
@@ -33,7 +36,7 @@ func TestSaveMessage(t *testing.T) {
 
 	t.Run("error case", func(t *testing.T) {
 		mockMessageRepository.
-			On("SaveMessage", mock.Anything, mock.AnythingOfType("*domain.Message")).
+			On("SaveMessage", mock.Anything, mock.AnythingOfType(messageType)).
 			Return(errors.New("error")).Once()
 
 		err := u.SaveMessage(context.TODO(), &mockMessage)
@@ -57,7 +60,7 @@ func TestEditMessage(t *testing.T) {
 			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
 			Return(&mockMessage, nil).Once()
 		mockMessageRepository.
-			On("EditMessage", mock.Anything, mock.AnythingOfType("*domain.Message")).
+			On("EditMessage", mock.Anything, mock.AnythingOfType(messageType)).
 			Return(nil).Once()
 
 		editedMsg, err := u.EditMessage(context.TODO(), mockMessage.RoomID, mockMessage.FromStudentID,
@@ -135,7 +138,7 @@ func TestEditMessage(t *testing.T) {
 			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
 			Return(&mockMessage, nil).Once()
 		mockMessageRepository.
-			On("EditMessage", mock.Anything, mock.AnythingOfType("*domain.Message")).
+			On("EditMessage", mock.Anything, mock.AnythingOfType(messageType)).
 			Return(errors.New("error")).Once()
 
 		_, err := u.EditMessage(context.TODO(), mockMessage.RoomID, mockMessage.FromStudentID,

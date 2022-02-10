@@ -58,7 +58,7 @@ func TestSaveMessageError (t *testing.T) {
 	query.On("WithContext", mock.Anything).
 		Return(query)
 	query.On("Exec").
-		Return(errors.New("internal error"))
+		Return(errors.New(internalErrorMessage))
 
 	err := cr.SaveMessage(context.Background(), &mockMessage)
 
@@ -209,7 +209,7 @@ func TestGetMessagesScanError(t *testing.T) {
 
 	scannerMock.On("Next").Return(true).Once()
 	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(errors.New("internal error"))
+		Return(errors.New(internalErrorMessage))
 
 
 	_, err := cr.GetMessages(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp, 2)
@@ -270,7 +270,7 @@ func TestDeleteMessageError (t *testing.T) {
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
-	query.On("Exec").Return(errors.New("internal error"))
+	query.On("Exec").Return(errors.New(internalErrorMessage))
 
 	err := cr.DeleteMessage(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp)
 
@@ -303,7 +303,7 @@ func TestDeleteMessageError (t *testing.T) {
 //			Return(query)
 //		query.On("WithContext", mock.Anything).
 //			Return(query)
-//		query.On("Exec").Return(errors.New("internal error"))
+//		query.On("Exec").Return(errors.New(internalErrorMessage))
 //
 //		err := cr.DeleteMessage(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp)
 //
