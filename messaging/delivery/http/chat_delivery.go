@@ -45,6 +45,9 @@ const (
 	Delete
 )
 
+const missingIdError = "Must provide room id"
+const invalidRequestBody = "invalid request body"
+
 func NewSendEvent(message domain.Message) Event {
 	return Event{
 		MessageType: Send,
@@ -252,14 +255,14 @@ func (h *MessageHandler) LoadMessages(c *gin.Context) {
 	}
 
 	if room == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Must provide room id"))
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(missingIdError))
 		return
 	}
 
 	var message domain.Message
 	err = c.ShouldBindJSON(&message)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("invalid request body"))
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(invalidRequestBody))
 		return
 	}
 
@@ -279,7 +282,7 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 	room := c.Param("roomID")
 
 	if room == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Must provide room id"))
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(missingIdError))
 		return
 	}
 
@@ -291,7 +294,7 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 	var message domain.Message
 	err := c.ShouldBindJSON(&message)
 	if err != nil || message.FromStudentID == "" || message.RoomID == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("invalid request body"))
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(invalidRequestBody))
 		return
 	}
 
@@ -315,7 +318,7 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	room := c.Param("roomID")
 
 	if room == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Must provide room id"))
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(missingIdError))
 		return
 	}
 
