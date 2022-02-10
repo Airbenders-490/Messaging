@@ -12,16 +12,28 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: 1.17
+        
     - name: Run tests and generate cover profile
       run: go test -v -coverprofile coverage.txt ./...
+      
     - name: Collect coverage files
       shell: bash
       run: echo "COVERAGES=$(find . -type f -name 'coverage.txt' | tr -s '\n' ',' | sed 's/,$//')" >> $GITHUB_ENV
+      
     - name: Upload coverage file to Codecov
       uses: codecov/codecov-action@v2
       with:
         files: '${{ env.COVERAGES }}'
+        
     - name: Upload coverage file to Codacy
       env:
           CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
       run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --force-coverage-parser go -r coverage.txt --commit-uuid $GITHUB_SHA
+ 
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
