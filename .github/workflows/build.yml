@@ -1,21 +1,53 @@
 name: Build
-on:
-  push:
-    branches:
-      - "**"
-  pull_request:
-    types: [opened, synchronize, reopened]
+
+on: [push, pull_request]
+
 jobs:
-  sonarcloud:
-    name: SonarCloud
+  fetch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/upload-artifact@master
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          name: source
+          path: .
+
+  build:
+    needs: fetch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@master
+        with:
+          name: source
+          path: .
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Mod download
+          run: go mod download
+      - name: Build
+        run: go build
+      - name: Create directory for binary
+        run: mkdir bin
+      - name: Copy binary
+        run: cp ./chat bin/chat
+      - uses: actions/upload-artifact@master
+        with:
+          name: binary
+          path: bin/
+
+  lint:
+    needs: fetch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@master
+        with:
+          name: source
+          path: .
+      - name: Install golangci-lint
+        run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.39.0
+      - name: Mod download
+        run: go mod download
+      - name: Execute Linter
+        run: $(go env GOPATH)/bin/golangci-lint run -v
