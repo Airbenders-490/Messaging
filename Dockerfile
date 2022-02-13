@@ -1,21 +1,31 @@
-# build
-
 FROM golang:1.17-alpine
 
-# Current working directory inside the container
-WORKDIR $GOPATH/github.com/Airbenders-490/chat
+ARG ROOT_DIR=$GOPATH/github.com/Airbenders-490/chat
 
-# Copy everything from the current directory to the PWD (Present Working Directory) inside the container
+# Current working directory inside the container
+WORKDIR "$ROOT_DIR"
+
+# Copy and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the code into the container
 COPY . .
 
-# Download all the dependencies
-RUN go get -d -v ./...
+# Build (compile code with dependencies) the app then leave the result in the output main directory
+RUN go build -o main .
 
-# Install the package
-RUN go install -v ./...
+# Move to /bin directory as the place for resulting binary
+WORKDIR /bin
 
-# This container exposes port 8080 to the outside world
+# Copy binary from rootDir/main to current /bin folder
+RUN cp /"$ROOT_DIR"/main .
+
+# This container exposes port 8080 to the outside world & listens on this port
 EXPOSE 8080
 
-# Run the executable
-CMD [ "chat" ]
+COPY ./wait-for-cassandra.sh /wait-for-cassandra.sh
+RUN chmod +x /wait-for-cassandra.sh
+
+# Command to run when starting the container
+CMD [ "/wait-for-cassandra.sh" ]
