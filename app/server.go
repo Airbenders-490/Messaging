@@ -40,7 +40,8 @@ func Start() {
 
 	mw := NewMiddleware()
 
-	go http.MainHub.StartHubListener()
+	mainHub := http.NewHub()
+	go mainHub.StartHubListener()
 	router := Server(mh, rh, mw)
 	router.Run()
 }
