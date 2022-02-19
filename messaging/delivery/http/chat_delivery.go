@@ -194,23 +194,9 @@ func (h *hub) StartHubListener() {
 	for {
 		select {
 		case s := <-h.Register:
-			connections := h.rooms[s.roomID]
-			if connections == nil {
-				connections = make(map[subscription]bool)
-				h.rooms[s.roomID] = connections
-			}
-			h.rooms[s.roomID][s] = true
+			h.RegisterCase(s)
 		case s := <-h.unregister:
-			connections := h.rooms[s.roomID]
-			if connections != nil {
-				if _, ok := connections[s]; ok {
-					delete(connections, s)
-					close(s.conn.send)
-					if len(connections) == 0 {
-						delete(h.rooms, s.roomID)
-					}
-				}
-			}
+			h.UnregisterCase(s)
 		case m := <-h.broadcast:
 			subscriptions := h.rooms[m.Message.RoomID]
 			for s := range subscriptions {
@@ -228,6 +214,28 @@ func (h *hub) StartHubListener() {
 				}
 			}
 
+		}
+	}
+}
+
+func (h *Hub) RegisterCase(s subscription) {
+	connections := h.rooms[s.roomID]
+	if connections == nil {
+		connections = make(map[subscription]bool)
+		h.rooms[s.roomID] = connections
+	}
+	h.rooms[s.roomID][s] = true
+}
+
+func (h *Hub) UnregisterCase(s subscription) {
+	connections := h.rooms[s.roomID]
+	if connections != nil {
+		if _, ok := connections[s]; ok {
+			delete(connections, s)
+			close(s.conn.send)
+			if len(connections) == 0 {
+				delete(h.rooms, s.roomID)
+			}
 		}
 	}
 }
