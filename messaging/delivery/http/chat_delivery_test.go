@@ -35,7 +35,8 @@ func TestMessageSending(t *testing.T) {
 		assert.Fail(t, "unable to get test server url")
 	}
 	addr.Scheme = "ws"
-	go http.MainHub.StartHubListener()
+	mainHub := http.NewHub()
+	go mainHub.StartHubListener()
 	const validChatRoomID = "1"
 	const invalidChatRoomID = "2"
 	t.Run("success", func(t *testing.T) {
@@ -193,7 +194,8 @@ func TestLoadMessages(t *testing.T) {
 	var retrievedMessages []domain.Message
 	err := faker.FakeData(&retrievedMessages)
 	assert.NoError(t, err)
-	go http.MainHub.StartHubListener()
+	mainHub := http.NewHub()
+	go mainHub.StartHubListener()
 	var mockMessage domain.Message
 	err = faker.FakeData(&mockMessage.SentTimestamp)
 	assert.NoError(t, err)
@@ -270,7 +272,8 @@ func TestEditMessage(t *testing.T) {
 	err := faker.FakeData(&editedMessage)
 	assert.NoError(t, err)
 
-	go http.MainHub.StartHubListener()
+	mainHub := http.NewHub()
+	go mainHub.StartHubListener()
 	t.Run("success", func(t *testing.T) {
 		putBody, err := json.Marshal(editedMessage)
 		assert.NoError(t, err)
@@ -343,7 +346,8 @@ func TestDeleteMessage(t *testing.T) {
 	var deletedMessage domain.Message
 	err := faker.FakeData(&deletedMessage)
 	assert.NoError(t, err)
-	go http.MainHub.StartHubListener()
+	mainHub := http.NewHub()
+	go mainHub.StartHubListener()
 	t.Run("success", func(t *testing.T) {
 		putBody, err := json.Marshal(deletedMessage)
 		assert.NoError(t, err)

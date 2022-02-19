@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -65,23 +66,33 @@ func NewDeleteEvent(message domain.Message) Event {
 	}
 }
 
-// Hub is the heart of the chat app. This is what is used to hold "rooms", register and unregister when connecting and
+// hub is the heart of the chat app. This is what is used to hold "rooms", register and unregister when connecting and
 // disconnecting, and broadcast. Whenever a message is sent to broadcast channel, it is delivered to all the connections
 // in room
-type Hub struct {
+type hub struct {
 	rooms      map[string]map[subscription]bool
 	broadcast  chan Event
 	Register   chan subscription
 	unregister chan subscription
 }
 
-// MainHub is the instantiation of our chat's heart
-// todo: make this a singleton
-var MainHub = Hub{
-	broadcast:  make(chan Event),
-	Register:   make(chan subscription),
-	unregister: make(chan subscription),
-	rooms:      make(map[string]map[subscription]bool),
+var (
+	singleton hub
+	once      sync.Once
+	mainHub = NewHub()
+)
+
+func NewHub() hub {
+	once.Do(func() {
+		singleton = hub{
+			broadcast:  make(chan Event),
+			Register:   make(chan subscription),
+			unregister: make(chan subscription),
+			rooms:      make(map[string]map[subscription]bool),
+		}
+	})
+
+	return singleton
 }
 
 const (
@@ -94,7 +105,7 @@ const (
 func (s *subscription) readPump(u domain.MessageUseCase) {
 	c := s.conn
 	defer func() {
-		MainHub.unregister <- *s
+		mainHub.unregister <- *s
 		c.ws.Close()
 	}()
 	c.ws.SetReadLimit(maxMessageSize)
@@ -113,7 +124,7 @@ func (s *subscription) readPump(u domain.MessageUseCase) {
 		if err != nil {
 			log.Printf("Failed to save message with err %s", err.Error())
 		}
-		MainHub.broadcast <- NewSendEvent(m)
+		mainHub.broadcast <- NewSendEvent(m)
 	}
 }
 
@@ -169,14 +180,14 @@ func (h *MessageHandler) ServeWs(w http.ResponseWriter, r *http.Request, roomID 
 	c := &connection{send: make(chan Event), ws: ws}
 	s := subscription{c, roomID, userID}
 	if authorized {
-		MainHub.Register <- s
+		mainHub.Register <- s
 	}
 	go s.writePump()
 	go s.readPump(h.u)
 }
 
-// StartHubListener starts the functioning of the Hub with respect to registering, unregistering and broadcasting
-func (h *Hub) StartHubListener() {
+// StartHubListener starts the functioning of the hub with respect to registering, unregistering and broadcasting
+func (h *hub) StartHubListener() {
 	for {
 		select {
 		case s := <-h.Register:
@@ -296,7 +307,7 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 		return
 	}
 
-	MainHub.broadcast <- NewEditEvent(message)
+	mainHub.broadcast <- NewEditEvent(message)
 	c.JSON(http.StatusOK, editedMessage)
 }
 
@@ -332,6 +343,6 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 		return
 	}
 
-	MainHub.broadcast <- NewDeleteEvent(message)
+	mainHub.broadcast <- NewDeleteEvent(message)
 	c.JSON(http.StatusAccepted, httputils.NewResponse("message deleted"))
 }
