@@ -30,7 +30,7 @@ func (h *middleware) AuthMiddleware() gin.HandlerFunc {
 		authToken := c.Request.Header.Get("Authorization")
 		if authToken == "" || authToken[:7] != "Bearer " {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "not authorized",
+				"error": "not authorized, missing bearer token",
 			})
 			c.Abort()
 			return

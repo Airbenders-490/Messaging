@@ -21,10 +21,10 @@ func mapUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler, rh *http.Roo
 	router.Use(mw.AuthMiddleware())
 
 	router.POST("/rooms", rh.SaveRoom)
-	router.GET("/rooms/:id", rh.GetChatRoomsFor)
+	router.GET("/rooms", rh.GetChatRoomsFor)
 	router.PUT("/rooms/add/:roomID/:id", rh.AddUserToRoom)
 	router.PUT("/rooms/remove/:roomID/:id", rh.RemoveUserFromRoom)
-	router.DELETE("/rooms/:id/:roomID", rh.DeleteRoom)
+	router.DELETE("/rooms/:roomID", rh.DeleteRoom)
 
 	router.GET("chat/:roomID", mh.LoadMessages)
 	router.PUT("chat/:roomID", mh.EditMessage)
