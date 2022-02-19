@@ -29,6 +29,17 @@ CREATE TABLE IF NOT EXISTS chat.student (
     last_name text
 );
 
--- INSERT INTO chat.messages (room_id, sent_timestamp, from_student_id, message_body) VALUES('9548c1de-8f2d-4fb0-8549-22265ebc1e89',23456792,'zubair', 'helloo there friend');
--- INSERT INTO chat.participants (room_id, students) VALUES(9548c1de-8f2d-4fb0-8549-22265ebc1e89, { 0f81db5c-8e99-4c62-8a34-d84a81de414e, db483bf6-db69-4df1-98c5-e40fcd46e5dc, db483bf6-db69-4df1-98c5-e40fcd46e5dc } );
--- UPDATE chat.participants SET students = students - {0f81db5c-8e99-4c62-8a34-d84a81de414f} WHERE room_id =  9548c1de-8f2d-4fb0-8549-22265ebc1e90;
+INSERT INTO chat.room (roomid, admin, name, students) VALUES ('office', 'michael' , 'office', {'michael', 'toby', 'dwight'});
+INSERT INTO chat.student_rooms (student, rooms) VALUES ('michael', {'office'});
+INSERT INTO chat.student_rooms (student, rooms) VALUES ('toby', {'office'});
+INSERT INTO chat.room (roomid, admin, name, students) VALUES ('allstars', 'dwight' , 'allstars', {'dwight', 'jim'});
+INSERT INTO chat.student_rooms (student, rooms) VALUES ('dwight', {'allstars', 'office'});
+INSERT INTO chat.student_rooms (student, rooms) VALUES ('jim', {'allstars'});
+INSERT INTO chat.student (student_id) VALUES ('jim');
+INSERT INTO chat.student (student_id) VALUES ('f882141d-07dd-460d-91da-877db8a3a670');
+INSERT INTO chat.student (student_id) VALUES ('michael');
+INSERT INTO chat.student (student_id) VALUES ('dwight');
+INSERT INTO chat.student (student_id) VALUES ('toby');
+INSERT INTO chat.student (student_id) VALUES ('pam');
+INSERT INTO chat.student (student_id) VALUES ('kevin');
+INSERT INTO chat.student (student_id) VALUES ('angela');

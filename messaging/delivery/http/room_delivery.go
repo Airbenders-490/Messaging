@@ -4,6 +4,7 @@ import (
 	"chat/domain"
 	"chat/utils/errors"
 	"chat/utils/httputils"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -19,12 +20,17 @@ func NewRoomHandler(ru domain.RoomUseCase) *RoomHandler {
 }
 
 func (h *RoomHandler) SaveRoom(c *gin.Context) {
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
+	student := domain.Student{ ID: loggedID }
+
 	var room domain.ChatRoom
 	err := c.ShouldBindJSON(&room)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Invalid request body format for Chat Room"))
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(fmt.Sprintf("Invalid request body format for Chat Room %v", err)))
 		return
 	}
+	room.Admin = student
 
 	ctx := c.Request.Context()
 	err = h.u.SaveRoom(ctx, &room)
@@ -65,10 +71,11 @@ func (h *RoomHandler) RemoveUserFromRoom(c *gin.Context) {
 }
 
 func (h *RoomHandler) GetChatRoomsFor(c *gin.Context) {
-	userID := c.Params.ByName("id")
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
 
 	ctx := c.Request.Context()
-	studentChatRooms, err := h.u.GetChatRoomsFor(ctx, userID)
+	studentChatRooms, err := h.u.GetChatRoomsFor(ctx, loggedID)
 	if err != nil {
 		errors.SetRESTError(err, c)
 		return
@@ -78,11 +85,13 @@ func (h *RoomHandler) GetChatRoomsFor(c *gin.Context) {
 }
 
 func (h *RoomHandler) DeleteRoom(c *gin.Context) {
-	userID := c.Params.ByName("id")
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
+
 	roomID := c.Params.ByName("roomID")
 
 	ctx := c.Request.Context()
-	err := h.u.DeleteRoom(ctx, userID, roomID)
+	err := h.u.DeleteRoom(ctx, loggedID, roomID)
 	if err != nil {
 		errors.SetRESTError(err, c)
 		return
