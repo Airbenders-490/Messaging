@@ -19,12 +19,24 @@ func NewRoomHandler(ru domain.RoomUseCase) *RoomHandler {
 }
 
 func (h *RoomHandler) SaveRoom(c *gin.Context) {
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
+
+	var student domain.Student
+	err := c.ShouldBindJSON(&student)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("invalid data"))
+		return
+	}
+	student.ID = loggedID
+
 	var room domain.ChatRoom
-	err := c.ShouldBindJSON(&room)
+	err = c.ShouldBindJSON(&room)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("Invalid request body format for Chat Room"))
 		return
 	}
+	room.Admin = student
 
 	ctx := c.Request.Context()
 	err = h.u.SaveRoom(ctx, &room)
