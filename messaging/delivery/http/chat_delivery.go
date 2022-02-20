@@ -218,7 +218,7 @@ func (h *hub) StartHubListener() {
 	}
 }
 
-func (h *Hub) RegisterCase(s subscription) {
+func (h *hub) RegisterCase(s subscription) {
 	connections := h.rooms[s.roomID]
 	if connections == nil {
 		connections = make(map[subscription]bool)
@@ -227,7 +227,7 @@ func (h *Hub) RegisterCase(s subscription) {
 	h.rooms[s.roomID][s] = true
 }
 
-func (h *Hub) UnregisterCase(s subscription) {
+func (h *hub) UnregisterCase(s subscription) {
 	connections := h.rooms[s.roomID]
 	if connections != nil {
 		if _, ok := connections[s]; ok {
