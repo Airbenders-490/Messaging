@@ -8,7 +8,8 @@ import (
 )
 
 const pathRoomID = "api/chat/:roomID"
-func mapUrls(mw Middleware, router *gin.Engine, mh *http.MessageHandler, rh *http.RoomHandler) {
+
+func mapUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler, rh *http.RoomHandler) {
 
 	r.GET("/chat/:roomID", func(c *gin.Context) {
 		roomID := c.Param("roomID")
