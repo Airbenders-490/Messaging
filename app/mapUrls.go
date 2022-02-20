@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-const pathRoomID = "api/chat/:roomID"
+const pathRoomID = "chat/:roomID"
 
 func mapUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler, rh *http.RoomHandler) {
 
