@@ -16,7 +16,6 @@ func mapUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler, rh *http.Roo
 		ctx := c.Request.Context()
 		mh.ServeWs(c.Writer, c.Request, roomID, userID, ctx)
 	})
-
 	router := r.Group("/api")
 	router.Use(mw.AuthMiddleware())
 

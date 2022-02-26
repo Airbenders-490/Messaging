@@ -28,15 +28,22 @@ func Start() {
 	}
 	log.Printf("Connected Cassandra database OK")
 
+
 	mr := repository.NewChatRepository(cassandra.NewSession(session))
 	rr := repository.NewRoomRepository(cassandra.NewSession(session))
 	sr := repository.NewStudentRepository(cassandra.NewSession(session))
 
 	mu := usecase.NewMessageUseCase(time.Second*2, mr, rr)
-	mh := http.NewMessageHandler(mu)
-
 	ru := usecase.NewRoomUseCase(rr, sr, time.Second*2)
+
+	mh := http.NewMessageHandler(mu)
 	rh := http.NewRoomHandler(ru)
+
+	su := usecase.NewStudentUseCase(*sr)
+
+	go su.ListenStudentCreation()
+	go su.ListenStudentEdit()
+	go su.ListenStudentDelete()
 
 	mw := NewMiddleware()
 
