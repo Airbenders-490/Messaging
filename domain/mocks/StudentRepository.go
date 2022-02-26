@@ -14,6 +14,34 @@ type StudentRepository struct {
 	mock.Mock
 }
 
+// DeleteStudent provides a mock function with given fields: ctx, id
+func (_m *StudentRepository) DeleteStudent(ctx context.Context, id string) error {
+	ret := _m.Called(ctx, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// EditStudent provides a mock function with given fields: ctx, student
+func (_m *StudentRepository) EditStudent(ctx context.Context, student *domain.Student) error {
+	ret := _m.Called(ctx, student)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.Student) error); ok {
+		r0 = rf(ctx, student)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetStudent provides a mock function with given fields: ctx, studentID
 func (_m *StudentRepository) GetStudent(ctx context.Context, studentID string) (*domain.Student, error) {
 	ret := _m.Called(ctx, studentID)
