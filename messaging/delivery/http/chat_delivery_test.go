@@ -20,6 +20,15 @@ import (
 )
 
 const chatRoomAddr = "%s/chat/%s"
+const messageBody = "Hello sir!"
+const putChatPath = "/api/chat/%s"
+const invalidDataMessage = "invalid data"
+const invalidBodyMessage = "invalid body"
+const restError = "rest error"
+const errorOccurredMessage = "error occurred"
+const validChatRoomID = "1"
+const invalidChatRoomID = "2"
+const errorMassage = "can't write message to socket"
 
 func TestMessageSending(t *testing.T) {
 	mockMessageUsecase := new(mocks.MessageUseCase)
@@ -56,22 +65,10 @@ func TestMessageSending(t *testing.T) {
 			assert.Fail(t, err.Error())
 		}
 
-		response := make(chan []byte)
-		errChan := make(chan error)
-		readyToRead := make(chan bool)
-		const messageBody = "Hello sir!"
-		go func(r chan []byte, e chan error) {
-			readyToRead <- true
-			_, msg, er := wsDefault.ReadMessage()
-			if er != nil {
-				e <- er
-			} else {
-				r <- msg
-			}
-		}(response, errChan)
-		<-readyToRead
+		response, errChan := readyToReadMethod(wsDefault)
+
 		err = ws.WriteMessage(websocket.TextMessage, []byte(messageBody))
-		assert.NoError(t, err, "can't write message to socket")
+		assert.NoError(t, err, errorMassage)
 		select {
 		case r := <-response:
 			var event http.Event
@@ -117,23 +114,10 @@ func TestMessageSending(t *testing.T) {
 			assert.Fail(t, err.Error())
 		}
 
-		response := make(chan []byte)
-		errChan := make(chan error)
-		readyToRead := make(chan bool)
-		const messageBody = "Hello sir!"
-		go func(r chan []byte, e chan error) {
-			readyToRead <- true
-			_ = wsDefault.SetReadDeadline(time.Now().Add(time.Second))
-			_, msg, er := wsDefault.ReadMessage()
-			if er != nil {
-				e <- er
-			} else {
-				r <- msg
-			}
-		}(response, errChan)
-		<-readyToRead
+		response, errChan := readyToReadMethod(wsDefault)
+
 		err = ws.WriteMessage(websocket.TextMessage, []byte(messageBody))
-		assert.NoError(t, err, "can't write message to socket")
+		assert.NoError(t, err, errorMassage)
 		select {
 		case <-response:
 			assert.Fail(t, "received a message when not expected")
@@ -159,23 +143,11 @@ func TestMessageSending(t *testing.T) {
 			assert.Fail(t, err.Error())
 		}
 
-		response := make(chan []byte)
-		errChan := make(chan error)
-		readyToRead := make(chan bool)
-		const messageBody = "Hello sir!"
-		go func(r chan []byte, e chan error) {
-			readyToRead <- true
-			_, msg, er := wsDefault.ReadMessage()
-			if er != nil {
-				e <- er
-			} else {
-				r <- msg
-			}
-		}(response, errChan)
-		<-readyToRead
+		response, errChan := readyToReadMethod(wsDefault)
+
 		_ = wsDefault.SetReadDeadline(time.Now().Add(time.Second))
 		err = ws.WriteMessage(websocket.TextMessage, []byte(messageBody))
-		assert.NoError(t, err, "can't write message to socket")
+		assert.NoError(t, err, errorMassage)
 		select {
 		case <-response:
 			assert.Fail(t, "received message in a different room. What?!")
@@ -183,6 +155,24 @@ func TestMessageSending(t *testing.T) {
 			assert.Error(t, e)
 		}
 	})
+}
+
+func readyToReadMethod(wsDefault *websocket.Conn) (chan []byte, chan error) {
+	response := make(chan []byte)
+	errChan := make(chan error)
+	readyToRead := make(chan bool)
+	go func(r chan []byte, e chan error) {
+		readyToRead <- true
+		_ = wsDefault.SetReadDeadline(time.Now().Add(time.Second))
+		_, msg, er := wsDefault.ReadMessage()
+		if er != nil {
+			e <- er
+		} else {
+			r <- msg
+		}
+	}(response, errChan)
+	<-readyToRead
+	return response, errChan
 }
 
 func TestLoadMessages(t *testing.T) {
@@ -226,7 +216,7 @@ func TestLoadMessages(t *testing.T) {
 		getBody, err := json.Marshal(mockMessage)
 		assert.NoError(t, err)
 		reader := strings.NewReader(string(getBody))
-		reqFound := httptest.NewRequest("GET", fmt.Sprintf("/api/chat/%s", mockMessage.RoomID), reader)
+		reqFound := httptest.NewRequest("GET", fmt.Sprintf(putChatPath, mockMessage.RoomID), reader)
 
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, reqFound)
@@ -234,9 +224,9 @@ func TestLoadMessages(t *testing.T) {
 		mockUseCase.AssertExpectations(t)
 	})
 
-	t.Run("invalid data", func(t *testing.T) {
-		reader := strings.NewReader("invalid body")
-		reqFound := httptest.NewRequest("GET", fmt.Sprintf("/api/chat/%s", mockMessage.RoomID), reader)
+	t.Run(invalidDataMessage, func(t *testing.T) {
+		reader := strings.NewReader(invalidBodyMessage)
+		reqFound := httptest.NewRequest("GET", fmt.Sprintf(putChatPath, mockMessage.RoomID), reader)
 
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, reqFound)
@@ -244,8 +234,9 @@ func TestLoadMessages(t *testing.T) {
 		mockUseCase.AssertExpectations(t)
 	})
 
-	t.Run("rest error", func(t *testing.T) {
-		restErr := errors.NewConflictError("error occurred")
+
+	t.Run(restError, func(t *testing.T) {
+		restErr := errors.NewConflictError(errorOccurredMessage)
 		mockUseCase.On("GetMessages", mock.Anything, mock.AnythingOfType("string"),
 			mock.Anything, mock.AnythingOfType("int")).
 			Return(nil, restErr).
@@ -282,7 +273,7 @@ func TestEditMessage(t *testing.T) {
 			Return(&editedMessage, nil).Once()
 
 		reader := strings.NewReader(string(putBody))
-		reqFound := httptest.NewRequest("PUT", fmt.Sprintf("/api/chat/%s",
+		reqFound := httptest.NewRequest("PUT", fmt.Sprintf(putChatPath,
 			editedMessage.RoomID), reader)
 
 		reqFound.Header.Set("id", editedMessage.FromStudentID)
@@ -292,9 +283,9 @@ func TestEditMessage(t *testing.T) {
 		mockUseCase.AssertExpectations(t)
 	})
 
-	t.Run("invalid data", func(t *testing.T) {
-		reader := strings.NewReader("invalid body")
-		reqFound := httptest.NewRequest("PUT", fmt.Sprintf("/api/chat/%s", editedMessage.RoomID), reader)
+	t.Run(invalidDataMessage, func(t *testing.T) {
+		reader := strings.NewReader(invalidBodyMessage)
+		reqFound := httptest.NewRequest("PUT", fmt.Sprintf(putChatPath, editedMessage.RoomID), reader)
 
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, reqFound)
@@ -307,7 +298,7 @@ func TestEditMessage(t *testing.T) {
 		assert.NoError(t, err)
 
 		reader := strings.NewReader(string(putBody))
-		reqFound := httptest.NewRequest("PUT", fmt.Sprintf("/api/chat/%s",
+		reqFound := httptest.NewRequest("PUT", fmt.Sprintf(putChatPath,
 			editedMessage.RoomID), reader)
 
 		reqFound.Header.Set("id", "avc")
@@ -317,16 +308,16 @@ func TestEditMessage(t *testing.T) {
 		mockUseCase.AssertExpectations(t)
 	})
 
-	t.Run("rest error", func(t *testing.T) {
+	t.Run(restError, func(t *testing.T) {
 		putBody, err := json.Marshal(editedMessage)
 		assert.NoError(t, err)
-		restErr := errors.NewConflictError("error occurred")
+		restErr := errors.NewConflictError(errorOccurredMessage)
 		mockUseCase.On("EditMessage", mock.Anything, mock.AnythingOfType("string"),
 			mock.AnythingOfType("string"), mock.Anything, mock.AnythingOfType("string")).
 			Return(nil, restErr).Once()
 
 		reader := strings.NewReader(string(putBody))
-		reqFound := httptest.NewRequest("PUT", fmt.Sprintf("/api/chat/%s",
+		reqFound := httptest.NewRequest("PUT", fmt.Sprintf(putChatPath,
 			editedMessage.RoomID), reader)
 
 		reqFound.Header.Set("id", editedMessage.FromStudentID)
@@ -356,7 +347,7 @@ func TestDeleteMessage(t *testing.T) {
 			Return(nil).Once()
 
 		reader := strings.NewReader(string(putBody))
-		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf("/api/chat/%s",
+		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(putChatPath,
 			deletedMessage.RoomID), reader)
 
 		reqFound.Header.Set("id", deletedMessage.FromStudentID)
@@ -366,10 +357,10 @@ func TestDeleteMessage(t *testing.T) {
 		mockUseCase.AssertExpectations(t)
 	})
 
-	t.Run("invalid data", func(t *testing.T) {
+	t.Run(invalidDataMessage, func(t *testing.T) {
 		//var mockMessage domain.Message
-		reader := strings.NewReader("invalid body")
-		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf("/api/chat/%s", deletedMessage.RoomID), reader)
+		reader := strings.NewReader(invalidBodyMessage)
+		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(putChatPath, deletedMessage.RoomID), reader)
 
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, reqFound)
@@ -382,7 +373,7 @@ func TestDeleteMessage(t *testing.T) {
 		assert.NoError(t, err)
 
 		reader := strings.NewReader(string(putBody))
-		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf("/api/chat/%s",
+		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(putChatPath,
 			deletedMessage.RoomID), reader)
 
 		reqFound.Header.Set("id", "avc")
@@ -392,15 +383,15 @@ func TestDeleteMessage(t *testing.T) {
 		mockUseCase.AssertExpectations(t)
 	})
 
-	t.Run("rest error", func(t *testing.T) {
+	t.Run(restError, func(t *testing.T) {
 		putBody, err := json.Marshal(deletedMessage)
 		assert.NoError(t, err)
-		restErr := errors.NewConflictError("error occurred")
+		restErr := errors.NewConflictError(errorOccurredMessage)
 		mockUseCase.On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"),
 			mock.Anything, mock.AnythingOfType("string")).Return(restErr).Once()
 
 		reader := strings.NewReader(string(putBody))
-		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf("/api/chat/%s",
+		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(putChatPath,
 			deletedMessage.RoomID), reader)
 
 		reqFound.Header.Set("id", deletedMessage.FromStudentID)
