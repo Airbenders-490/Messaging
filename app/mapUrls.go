@@ -7,8 +7,6 @@ import (
 	"strconv"
 )
 
-const pathRoomID = "chat/:roomID"
-
 func mapUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler, rh *http.RoomHandler) {
 
 	r.GET("/chat/:roomID", func(c *gin.Context) {
@@ -27,7 +25,7 @@ func mapUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler, rh *http.Roo
 	router.PUT("/rooms/remove/:roomID/:id", rh.RemoveUserFromRoom)
 	router.DELETE("/rooms/:roomID", rh.DeleteRoom)
 
-
+	const pathRoomID = "chat/:roomID"
 	router.GET(pathRoomID, mh.LoadMessages)
 	router.PUT(pathRoomID, mh.EditMessage)
 	router.DELETE(pathRoomID, mh.DeleteMessage)
