@@ -15,6 +15,8 @@ const (
 	failOpen = "Failed to open a channel"
 	failExchange = "Failed to declare an exchange"
 	failQueue = "Failed to declare a queue"
+	failedToRegisterConsumer = "Failed to register a consumer"
+ 	failedBindQueue = "Failed to bind a queue"
 )
 
 type studentUseCase struct {
@@ -32,55 +34,7 @@ func failOnError(err error, msg string) {
 }
 
 func (s studentUseCase) ListenStudentCreation() {
-	conn, err := amqp.Dial(os.Getenv("RABBIT_URL"))
-	failOnError(err, failConnect)
-	defer conn.Close()
-	ch, err := conn.Channel()
-	failOnError(err, failOpen)
-	defer ch.Close()
-
-	err = ch.ExchangeDeclare(
-		"profile", // name
-		"topic",      // type
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // no-wait
-		nil,          // arguments
-	)
-	failOnError(err, failExchange)
-
-	q, err := ch.QueueDeclare(
-		"",    // name
-		false, // durable
-		false, // delete when unused
-		true,  // exclusive
-		false, // no-wait
-		nil,   // arguments
-	)
-	failOnError(err, failQueue)
-
-	err = ch.QueueBind(
-		q.Name,       // queue name
-		"profile.created",            // routing key
-		"profile", // exchange
-		false,
-		nil)
-	failOnError(err, "Failed to bind a queue")
-
-
-	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,   // auto ack
-		false,  // exclusive
-		false,  // no local
-		false,  // no wait
-		nil,    // args
-	)
-	failOnError(err, "Failed to register a consumer")
-
-	forever := make(chan bool)
+	err, msgs, forever := s.RefactoredListenStudentCreation()
 
 	go func() {
 		for d := range msgs {
@@ -102,56 +56,7 @@ func (s studentUseCase) ListenStudentCreation() {
 
 // ListenStudentEdit listens to the
 func (s studentUseCase) ListenStudentEdit() {
-	conn, err := amqp.Dial(os.Getenv("RABBIT_URL"))
-	failOnError(err, failConnect)
-	defer conn.Close()
-
-	ch, err := conn.Channel()
-	failOnError(err, failOpen)
-	defer ch.Close()
-
-	err = ch.ExchangeDeclare(
-		"profile", // name
-		"topic",      // type
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // no-wait
-		nil,          // arguments
-	)
-	failOnError(err, failExchange)
-
-	q, err := ch.QueueDeclare(
-		"",    // name
-		false, // durable
-		false, // delete when unused
-		true,  // exclusive
-		false, // no-wait
-		nil,   // arguments
-	)
-	failOnError(err, failQueue)
-
-	err = ch.QueueBind(
-		q.Name,       // queue name
-		"profile.updated",            // routing key
-		"profile", // exchange
-		false,
-		nil)
-	failOnError(err, "Failed to bind a queue")
-
-
-	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,   // auto ack
-		false,  // exclusive
-		false,  // no local
-		false,  // no wait
-		nil,    // args
-	)
-	failOnError(err, "Failed to register a consumer")
-
-	forever := make(chan bool)
+	err, msgs, forever := s.RefactoredListenStudentCreation()
 
 	go func() {
 		for d := range msgs {
@@ -171,8 +76,7 @@ func (s studentUseCase) ListenStudentEdit() {
 	<-forever
 }
 
-// ListenStudentDelete listens to the queue for any deleted students
-func (s studentUseCase) ListenStudentDelete() {
+func (s studentUseCase) RefactoredListenStudentCreation() (error, <-chan amqp.Delivery, chan bool) {
 	conn, err := amqp.Dial(os.Getenv("RABBIT_URL"))
 	failOnError(err, failConnect)
 	defer conn.Close()
@@ -183,12 +87,12 @@ func (s studentUseCase) ListenStudentDelete() {
 
 	err = ch.ExchangeDeclare(
 		"profile", // name
-		"topic",      // type
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // no-wait
-		nil,          // arguments
+		"topic",   // type
+		true,      // durable
+		false,     // auto-deleted
+		false,     // internal
+		false,     // no-wait
+		nil,       // arguments
 	)
 	failOnError(err, failExchange)
 
@@ -203,26 +107,31 @@ func (s studentUseCase) ListenStudentDelete() {
 	failOnError(err, failQueue)
 
 	err = ch.QueueBind(
-		q.Name,       // queue name
-		"profile.deleted",            // routing key
-		"profile", // exchange
+		q.Name,            // queue name
+		"profile.updated", // routing key
+		"profile",         // exchange
 		false,
 		nil)
-	failOnError(err, "Failed to bind a queue")
-
+	failOnError(err, failedBindQueue)
 
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		false,   // auto ack
+		false,  // auto ack
 		false,  // exclusive
 		false,  // no local
 		false,  // no wait
 		nil,    // args
 	)
-	failOnError(err, "Failed to register a consumer")
+	failOnError(err, failedToRegisterConsumer)
 
 	forever := make(chan bool)
+	return err, msgs, forever
+}
+
+// ListenStudentDelete listens to the queue for any deleted students
+func (s studentUseCase) ListenStudentDelete() {
+	err, msgs, forever := s.RefactoredListenStudentCreation()
 
 	go func() {
 		for d := range msgs {
