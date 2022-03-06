@@ -200,7 +200,7 @@ func TestLoadMessages(t *testing.T) {
 		getBody, err := json.Marshal(mockMessage)
 		assert.NoError(t, err)
 		reader := strings.NewReader(string(getBody))
-		reqFound := httptest.NewRequest("GET", fmt.Sprintf("/api/chat/%s?limit=%s", mockMessage.RoomID, "5"), reader)
+		reqFound := httptest.NewRequest("POST", fmt.Sprintf("/api/chat/%s?limit=%s", mockMessage.RoomID, "5"), reader)
 
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, reqFound)
@@ -216,7 +216,7 @@ func TestLoadMessages(t *testing.T) {
 		getBody, err := json.Marshal(mockMessage)
 		assert.NoError(t, err)
 		reader := strings.NewReader(string(getBody))
-		reqFound := httptest.NewRequest("GET", fmt.Sprintf(putChatPath, mockMessage.RoomID), reader)
+		reqFound := httptest.NewRequest("POST", fmt.Sprintf(putChatPath, mockMessage.RoomID), reader)
 
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, reqFound)
@@ -226,7 +226,7 @@ func TestLoadMessages(t *testing.T) {
 
 	t.Run(invalidDataMessage, func(t *testing.T) {
 		reader := strings.NewReader(invalidBodyMessage)
-		reqFound := httptest.NewRequest("GET", fmt.Sprintf(putChatPath, mockMessage.RoomID), reader)
+		reqFound := httptest.NewRequest("POST", fmt.Sprintf(putChatPath, mockMessage.RoomID), reader)
 
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, reqFound)
@@ -244,7 +244,7 @@ func TestLoadMessages(t *testing.T) {
 		getBody, err := json.Marshal(mockMessage)
 		assert.NoError(t, err)
 		reader := strings.NewReader(string(getBody))
-		reqFound := httptest.NewRequest("GET", fmt.Sprintf("/api/chat/%s?limit=%s", mockMessage.RoomID, "5"), reader)
+		reqFound := httptest.NewRequest("POST", fmt.Sprintf("/api/chat/%s?limit=%s", mockMessage.RoomID, "5"), reader)
 
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, reqFound)
