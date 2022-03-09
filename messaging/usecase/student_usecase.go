@@ -34,7 +34,7 @@ func failOnError(err error, msg string) {
 }
 
 func (s studentUseCase) ListenStudentCreation() {
-	err, msgs, forever := s.RefactoredListenStudentCreation()
+	err, msgs, forever := s.QueueListener("created")
 
 	go func() {
 		for d := range msgs {
@@ -54,10 +54,12 @@ func (s studentUseCase) ListenStudentCreation() {
 	<-forever
 }
 
+
+
 // ListenStudentEdit listens to the
 func (s studentUseCase) ListenStudentEdit() {
-	err, msgs, forever := s.RefactoredListenStudentCreation()
-
+	err, msgs, forever := s.QueueListener("updated")
+	
 	go func() {
 		for d := range msgs {
 			var st domain.Student
@@ -76,7 +78,28 @@ func (s studentUseCase) ListenStudentEdit() {
 	<-forever
 }
 
-func (s studentUseCase) RefactoredListenStudentCreation() (error, <-chan amqp.Delivery, chan bool) {
+// ListenStudentDelete listens to the queue for any deleted students
+func (s studentUseCase) ListenStudentDelete() {
+	err, msgs, forever := s.QueueListener("deleted")
+
+	go func() {
+		for d := range msgs {
+			id := string(d.Body)
+			err = s.sr.DeleteStudent(context.Background(), id)
+			if err != nil {
+				log.Println("couldn't delete student ", err)
+				continue
+			}
+			d.Ack(false)
+			log.Println("deleted a student")
+		}
+	}()
+
+	log.Printf(" [*] Waiting for delete")
+	<-forever
+}
+
+func (s studentUseCase) QueueListener(operation string) (error, <-chan amqp.Delivery, chan bool) {
 	conn, err := amqp.Dial(os.Getenv("RABBIT_URL"))
 	failOnError(err, failConnect)
 	defer conn.Close()
@@ -108,7 +131,7 @@ func (s studentUseCase) RefactoredListenStudentCreation() (error, <-chan amqp.De
 
 	err = ch.QueueBind(
 		q.Name,            // queue name
-		"profile.updated", // routing key
+		"profile."+operation, // routing key
 		"profile",         // exchange
 		false,
 		nil)
@@ -127,25 +150,4 @@ func (s studentUseCase) RefactoredListenStudentCreation() (error, <-chan amqp.De
 
 	forever := make(chan bool)
 	return err, msgs, forever
-}
-
-// ListenStudentDelete listens to the queue for any deleted students
-func (s studentUseCase) ListenStudentDelete() {
-	err, msgs, forever := s.RefactoredListenStudentCreation()
-
-	go func() {
-		for d := range msgs {
-			id := string(d.Body)
-			err = s.sr.DeleteStudent(context.Background(), id)
-			if err != nil {
-				log.Println("couldn't delete student ", err)
-				continue
-			}
-			d.Ack(false)
-			log.Println("deleted a student")
-		}
-	}()
-
-	log.Printf(" [*] Waiting for delete")
-	<-forever
 }
