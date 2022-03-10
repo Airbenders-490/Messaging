@@ -20,6 +20,7 @@ func mapUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler, rh *http.Roo
 
 	router.POST("/rooms", rh.SaveRoom)
 	router.GET("/rooms", rh.GetChatRoomsFor)
+	router.GET("/rooms/class/:className", rh.GetChatRoomsByClass)
 	router.PUT("/rooms/add/:roomID/:id", rh.AddUserToRoom)
 	router.PUT("/rooms/remove/:roomID/:id", rh.RemoveUserFromRoom)
 	router.DELETE("/rooms/:roomID", rh.DeleteRoom)

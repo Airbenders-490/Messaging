@@ -22,6 +22,7 @@ const (
 	addParticipantToRoom      = `UPDATE chat.room SET students = students +? WHERE roomid=?;`
 	deleteRoom                = `DELETE FROM chat.room WHERE roomid=?;`
 	getRoom                   = `SELECT * FROM chat.room WHERE roomid=?;`
+	getChatRoomsByClass       = `SELECT * FROM chat.room WHERE class=? ALLOW FILTERING;`
 	removeParticipantFromRoom = `UPDATE chat.room SET students = students -? WHERE roomid=?;`
 	saveRoom                  = `INSERT INTO chat.room (roomid, name, admin, students) VALUES (?,?,?,?);`
 
@@ -105,6 +106,34 @@ func (r RoomRepository) GetRoomsFor(ctx context.Context, userID string) (*domain
 	StudentRoom.Rooms = rooms
 
 	return &StudentRoom, err
+}
+
+func (r RoomRepository) GetChatRoomsByClass(ctx context.Context, className string) ([]domain.ChatRoom, error) {
+	retrievedChatRooms := make([]domain.ChatRoom,0)
+	var scanner cassandra.ScannerInterface
+	var studentIDs []string
+	scanner = r.dbSession.Query(getChatRoomsByClass, className).WithContext(ctx).Consistency(gocql.One).Iter().Scanner()
+
+	for scanner.Next() {
+		var room domain.ChatRoom
+		err := scanner.Scan(&room.RoomID, &room.Admin.ID, &room.Class, &room.Deleted, &room.Name, &studentIDs)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, ID := range studentIDs {
+			var student domain.Student
+			student.ID = ID
+			room.Students = append(room.Students, student)
+		}
+		retrievedChatRooms = append(retrievedChatRooms, room)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return retrievedChatRooms, nil
 }
 
 func (r RoomRepository) RemoveRoomForParticipant(ctx context.Context, roomID string, userID string) error {

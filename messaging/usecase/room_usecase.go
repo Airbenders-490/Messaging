@@ -104,6 +104,19 @@ func (u *roomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*doma
 	return studentChatRooms, nil
 }
 
+// GetChatRoomsByClass should get rooms in chat.room by className, returns empty list if no rooms found
+func (u *roomUseCase) GetChatRoomsByClass(ctx context.Context, className string) ([]domain.ChatRoom, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
+
+	rooms, err := u.rr.GetChatRoomsByClass(ctx, className)
+	if err != nil {
+		return nil, err
+	}
+
+	return rooms, nil
+}
+
 // DeleteRoom should delete room for all users in chat.student_rooms and delete room from chat.room
 func (u *roomUseCase) DeleteRoom(ctx context.Context, userID string, roomID string) error {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)

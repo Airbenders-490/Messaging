@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS  chat.room (
     Name text,
     Admin text,
     students set<text>,
-    deleted timestamp
+    deleted timestamp,
+    class text
 );
 
 CREATE TABLE IF NOT EXISTS chat.student_rooms (
@@ -29,16 +30,17 @@ CREATE TABLE IF NOT EXISTS chat.student (
     last_name text
 );
 
-INSERT INTO chat.room (roomid, admin, name, students) VALUES ('office', 'michael' , 'office', {'michael', 'toby', 'dwight'});
-INSERT INTO chat.student_rooms (student, rooms) VALUES ('michael', {'office'});
+-- michael is eaf54fae-1ab8-4b5a-8047-51904f6ae884
+-- dwight is 172ff420-f0eb-4d75-a26b-8d058a8499ec
+INSERT INTO chat.room (roomid, admin, name, students, class) VALUES ('office', 'eaf54fae-1ab8-4b5a-8047-51904f6ae884', 'office', {'eaf54fae-1ab8-4b5a-8047-51904f6ae884', 'toby', '172ff420-f0eb-4d75-a26b-8d058a8499ec'}, 'soen490');
+INSERT INTO chat.student_rooms (student, rooms) VALUES ('eaf54fae-1ab8-4b5a-8047-51904f6ae884', {'office'});
 INSERT INTO chat.student_rooms (student, rooms) VALUES ('toby', {'office'});
-INSERT INTO chat.room (roomid, admin, name, students) VALUES ('allstars', 'dwight' , 'allstars', {'dwight', 'jim'});
-INSERT INTO chat.student_rooms (student, rooms) VALUES ('dwight', {'allstars', 'office'});
+INSERT INTO chat.room (roomid, admin, name, students, class) VALUES ('allstars', '172ff420-f0eb-4d75-a26b-8d058a8499ec' , 'allstars', {'172ff420-f0eb-4d75-a26b-8d058a8499ec', 'jim'}, 'soen385');
+INSERT INTO chat.student_rooms (student, rooms) VALUES ('172ff420-f0eb-4d75-a26b-8d058a8499ec', {'allstars', 'office'});
 INSERT INTO chat.student_rooms (student, rooms) VALUES ('jim', {'allstars'});
 INSERT INTO chat.student (student_id) VALUES ('jim');
-INSERT INTO chat.student (student_id) VALUES ('f882141d-07dd-460d-91da-877db8a3a670');
-INSERT INTO chat.student (student_id) VALUES ('michael');
-INSERT INTO chat.student (student_id) VALUES ('dwight');
+INSERT INTO chat.student (student_id) VALUES ('eaf54fae-1ab8-4b5a-8047-51904f6ae884');
+INSERT INTO chat.student (student_id) VALUES ('172ff420-f0eb-4d75-a26b-8d058a8499ec');
 INSERT INTO chat.student (student_id) VALUES ('toby');
 INSERT INTO chat.student (student_id) VALUES ('pam');
 INSERT INTO chat.student (student_id) VALUES ('kevin');
