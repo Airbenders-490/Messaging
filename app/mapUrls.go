@@ -29,4 +29,5 @@ func mapUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler, rh *http.Roo
 	router.POST(pathRoomID, mh.LoadMessages)
 	router.PUT(pathRoomID, mh.EditMessage)
 	router.DELETE(pathRoomID, mh.DeleteMessage)
+	router.POST("chat/joinRequest/:roomID", mh.JoinRequest)
 }

@@ -29,10 +29,6 @@ func NewChatRepository(session cassandra.SessionInterface) *MessageRepository {
 
 func (m *MessageRepository) SaveMessage(ctx context.Context, message *domain.Message) error {
 	return m.dbSession.Query(insertMessage, message.RoomID, message.FromStudentID, message.MessageBody, message.SentTimestamp).WithContext(ctx).Exec()
-	//if err != nil {
-	//	return err
-	//}
-	//return nil
 }
 
 func (m *MessageRepository) EditMessage(ctx context.Context, message *domain.Message) error {

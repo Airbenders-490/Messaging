@@ -357,3 +357,20 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	mainHub.broadcast <- NewDeleteEvent(message)
 	c.JSON(http.StatusAccepted, httputils.NewResponse("message deleted"))
 }
+
+func (h *MessageHandler) JoinRequest(c *gin.Context) {
+	room := c.Param("roomID")
+
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
+
+	ctx := c.Request.Context()
+
+	err := h.u.JoinRequest(ctx, room, loggedID, time.Now().UTC())
+	if err != nil {
+		errors.SetRESTError(err, c)
+		return
+	}
+
+	c.JSON(http.StatusOK, httputils.NewResponse("Request Sent"))
+}

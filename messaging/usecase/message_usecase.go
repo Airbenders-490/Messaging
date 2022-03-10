@@ -4,6 +4,7 @@ import (
 	"chat/domain"
 	"chat/utils/errors"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -11,11 +12,16 @@ type messageUseCase struct {
 	timeout           time.Duration
 	messageRepository domain.MessageRepository
 	roomRepository    domain.RoomRepository
+	studentRepository domain.StudentRepository
 }
 
 // NewMessageUseCase instantiates a
-func NewMessageUseCase(t time.Duration, mr domain.MessageRepository, rr domain.RoomRepository) domain.MessageUseCase {
-	return &messageUseCase{timeout: t, messageRepository: mr, roomRepository: rr}
+func NewMessageUseCase(
+	t time.Duration,
+	mr domain.MessageRepository,
+	rr domain.RoomRepository,
+	sr domain.StudentRepository) domain.MessageUseCase {
+	return &messageUseCase{timeout: t, messageRepository: mr, roomRepository: rr, studentRepository: sr}
 }
 
 func (u *messageUseCase) IsAuthorized(ctx context.Context, userID, roomID string) (authorized bool) {
@@ -102,4 +108,27 @@ func (u *messageUseCase) DeleteMessage(ctx context.Context, roomID string, timeS
 	}
 
 	return u.messageRepository.DeleteMessage(c, roomID, timeStamp)
+}
+
+func (u *messageUseCase) JoinRequest(ctx context.Context, roomID string, userID string, timeStamp time.Time) error {
+	c, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
+
+	student, err := u.studentRepository.GetStudent(c, userID)
+	if err != nil {
+		return errors.NewNotFoundError("Student does not exist")
+	}
+
+	_, err = u.roomRepository.GetRoom(c, roomID)
+	if err != nil {
+		return errors.NewConflictError(fmt.Sprintf("Room with ID %s does not exist", roomID))
+	}
+
+	m := domain.Message{
+		RoomID: roomID,
+		SentTimestamp: timeStamp,
+		FromStudentID: userID,
+		MessageBody: fmt.Sprintf("%s %s has requested to join your group.", student.FirstName, student.LastName)}
+
+	return u.messageRepository.SaveMessage(c, &m)
 }

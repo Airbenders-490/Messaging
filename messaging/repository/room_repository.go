@@ -45,7 +45,7 @@ func (r RoomRepository) GetRoom(ctx context.Context, roomID string) (*domain.Cha
 	var studentText []string
 	var allStudents []domain.Student
 
-	err := r.dbSession.Query(getRoom, roomID).WithContext(ctx).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin.ID, &room.Deleted, &room.Name, &studentText)
+	err := r.dbSession.Query(getRoom, roomID).WithContext(ctx).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin.ID, &room.Class, &room.Deleted, &room.Name, &studentText)
 	if err != nil {
 		return nil, err
 	}

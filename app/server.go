@@ -33,7 +33,7 @@ func Start() {
 	rr := repository.NewRoomRepository(cassandra.NewSession(session))
 	sr := repository.NewStudentRepository(cassandra.NewSession(session))
 
-	mu := usecase.NewMessageUseCase(time.Second*2, mr, rr)
+	mu := usecase.NewMessageUseCase(time.Second*2, mr, rr, sr)
 	ru := usecase.NewRoomUseCase(rr, sr, time.Second*2)
 
 	mh := http.NewMessageHandler(mu)
