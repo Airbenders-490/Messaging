@@ -18,7 +18,7 @@ func NewStudentRepository(session cassandra.SessionInterface) *StudentRepository
 }
 
 const (
-	saveStudent = `INSERT INTO chat.student (student_id, email, first_name, last_name) VALUES (?,?,?);`
+	saveStudent = `INSERT INTO chat.student (student_id, email, first_name, last_name) VALUES (?,?,?,?);`
 	editStudent = `UPDATE chat.student SET email=?, first_name=?, last_name=? WHERE student_id=?`
 	deleteStudent = `DELETE FROM chat.student WHERE student_id=?`
 	getStudent  = `SELECT * FROM chat.student WHERE student_id=?;`

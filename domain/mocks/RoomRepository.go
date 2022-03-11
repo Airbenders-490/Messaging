@@ -84,6 +84,29 @@ func (_m *RoomRepository) DeleteRoom(ctx context.Context, roomID string) error {
 	return r0
 }
 
+// GetChatRoomsByClass provides a mock function with given fields: ctx, className
+func (_m *RoomRepository) GetChatRoomsByClass(ctx context.Context, className string) ([]domain.ChatRoom, error) {
+	ret := _m.Called(ctx, className)
+
+	var r0 []domain.ChatRoom
+	if rf, ok := ret.Get(0).(func(context.Context, string) []domain.ChatRoom); ok {
+		r0 = rf(ctx, className)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.ChatRoom)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, className)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetRoom provides a mock function with given fields: ctx, roomID
 func (_m *RoomRepository) GetRoom(ctx context.Context, roomID string) (*domain.ChatRoom, error) {
 	ret := _m.Called(ctx, roomID)

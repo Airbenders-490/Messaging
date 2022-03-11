@@ -292,3 +292,30 @@ func TestDeleteRoom(t *testing.T) {
 		mockRoomRepo.AssertExpectations(t)
 	})
 }
+
+func TestGetChatRoomsByClass(t *testing.T) {
+
+	t.Run(caseSuccess, func(t *testing.T) {
+		mockRooms := []domain.ChatRoom{}
+		resetRoomUsecaseTestFields()
+
+		mockRoomRepo.On("GetChatRoomsByClass", mock.Anything, mock.AnythingOfType("string")).
+			Return(mockRooms,nil)
+		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
+		_, err := u.GetChatRoomsByClass(context.TODO(), "")
+		assert.NoError(t, err)
+		mockRoomRepo.AssertExpectations(t)
+	})
+
+	t.Run("Fail", func(t *testing.T) {
+		resetRoomUsecaseTestFields()
+
+		mockRoomRepo.On("GetChatRoomsByClass", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil,errors.New(""))
+		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
+		_, err := u.GetChatRoomsByClass(context.TODO(), "")
+		assert.Error(t, err)
+		mockRoomRepo.AssertExpectations(t)
+
+	})
+}

@@ -3,11 +3,15 @@ package usecase
 import (
 	"chat/domain"
 	"chat/domain/mocks"
+	mocks2 "chat/utils/mocks"
 	"context"
 	"errors"
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"os"
+	"path"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -20,7 +24,7 @@ func TestSaveMessage(t *testing.T) {
 
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
-	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil)
+	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil, nil, nil)
 
 	t.Run("success", func(t *testing.T) {
 		mockMessageRepository.
@@ -53,7 +57,7 @@ func TestEditMessage(t *testing.T) {
 
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
-	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil)
+	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil, nil, nil)
 
 	t.Run("success", func(t *testing.T) {
 		mockMessageRepository.
@@ -156,7 +160,7 @@ func TestGetMessages(t *testing.T) {
 	var mockMessage []domain.Message
 
 	faker.FakeData(&mockMessage)
-	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil)
+	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil, nil, nil)
 
 	t.Run("success", func(t *testing.T) {
 		mockMessageRepository.
@@ -192,7 +196,7 @@ func TestDeleteMessage(t *testing.T) {
 	mockMessageRepository := new(mocks.MessageRepository)
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
-	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil)
+	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil, nil, nil)
 
 	t.Run("success", func(t *testing.T) {
 		mockMessageRepository.
@@ -250,6 +254,159 @@ func TestDeleteMessage(t *testing.T) {
 
 		assert.Error(t, err)
 
+		mockMessageRepository.AssertExpectations(t)
+	})
+}
+
+func TestJoinRequest(t *testing.T) {
+	t.Parallel()
+	mockMessageRepository := new(mocks.MessageRepository)
+	mockStudentRepository := new(mocks.StudentRepository)
+	mockRoomRepository := new(mocks.RoomRepository)
+	var mockStudent domain.Student
+	faker.FakeData(&mockStudent)
+	u := NewMessageUseCase(time.Second*2, mockMessageRepository, mockRoomRepository, mockStudentRepository, nil)
+
+	t.Run("success", func(t *testing.T) {
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, nil).Once()
+
+		mockMessageRepository.
+			On("SaveMessage", mock.Anything, mock.Anything).
+			Return(nil).Once()
+
+		err := u.JoinRequest(context.TODO(), "", "", time.Now())
+
+		assert.NoError(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
+
+	t.Run("error: student does not exist", func(t *testing.T) {
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, errors.New("")).Once()
+
+		err := u.JoinRequest(context.TODO(), "", "", time.Now())
+
+		assert.Error(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
+
+	t.Run("error: room does not exist", func(t *testing.T) {
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, errors.New("")).Once()
+
+		err := u.JoinRequest(context.TODO(), "", "", time.Now())
+
+		assert.Error(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
+}
+
+func TestSendRejection(t *testing.T) {
+	t.Parallel()
+	mockMessageRepository := new(mocks.MessageRepository)
+	mockStudentRepository := new(mocks.StudentRepository)
+	mockRoomRepository := new(mocks.RoomRepository)
+	mockMailer := new(mocks2.Mailer)
+	mockRoom := domain.ChatRoom{Admin: domain.Student{ID: ""}}
+	var mockStudent domain.Student
+	faker.FakeData(&mockStudent)
+	u := NewMessageUseCase(time.Second*2, mockMessageRepository, mockRoomRepository, mockStudentRepository, mockMailer)
+
+	// To fix path not specified error from template.ParseFiles(filepath)
+	_, filename, _, _ := runtime.Caller(0)
+	dir := path.Join(path.Dir(filename), "..", "..") // go to root dir
+	err := os.Chdir(dir)
+	if err != nil {
+		panic(err)
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockRoom, nil).Once()
+
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+
+		mockMailer.
+			On("SendSimpleMail", mock.AnythingOfType("string"), mock.Anything).
+			Return(nil).Once()
+
+		err := u.SendRejection(context.TODO(), "", "", "")
+
+		assert.NoError(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
+
+	t.Run("error: room does not exist", func(t *testing.T) {
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, errors.New("")).Once()
+
+		err := u.SendRejection(context.TODO(), "", "", "")
+
+		assert.Error(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
+
+	t.Run("error: unauthorized", func(t *testing.T) {
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockRoom, nil).Once()
+
+		err := u.SendRejection(context.TODO(), "", "", "wrongUser")
+
+		assert.Error(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
+
+	t.Run("error: student does not exist", func(t *testing.T) {
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockRoom, nil).Once()
+
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, errors.New("")).Once()
+
+		err := u.SendRejection(context.TODO(), "", "", "")
+
+		assert.Error(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
+
+	t.Run("error: invalid file path", func(t *testing.T) {
+		// Go to incorrect file path, template.ParseFiles(filepath)
+		_, filename, _, _ := runtime.Caller(0)
+		dir := path.Join(path.Dir(filename), "..") // go to root dir
+		err := os.Chdir(dir)
+		if err != nil {
+			panic(err)
+		}
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockRoom, nil).Once()
+
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+
+		err = u.SendRejection(context.TODO(), "", "", "")
+
+		assert.Error(t, err)
 		mockMessageRepository.AssertExpectations(t)
 	})
 }

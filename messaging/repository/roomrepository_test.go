@@ -12,6 +12,7 @@ import (
 var batchMock = &mocks.BatchInterface{}
 var sessionMock = &mocks.SessionInterface{}
 var queryMock = &mocks.QueryInterface{}
+var mockIter = &mocks.IterInterface{}
 var ctx = context.Background()
 var rr = NewRoomRepository(sessionMock)
 var room = &domain.ChatRoom{
@@ -25,6 +26,7 @@ func resetFields() {
 	batchMock = &mocks.BatchInterface{}
 	sessionMock = &mocks.SessionInterface{}
 	queryMock = &mocks.QueryInterface{}
+	mockIter = &mocks.IterInterface{}
 	ctx = context.Background()
 	rr = NewRoomRepository(sessionMock)
 	room = &domain.ChatRoom{
@@ -62,7 +64,7 @@ func TestGetRoomSuccessEmptyRoom(t *testing.T) {
 	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
 	queryMock.On("WithContext", ctx).Return(queryMock)
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
-	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	_, err := rr.GetRoom(ctx, mock.Anything)
 
@@ -77,7 +79,7 @@ func TestGetRoomFail(t *testing.T) {
 	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
 	queryMock.On("WithContext", ctx).Return(queryMock)
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
-	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(internalErrorMessage))
+	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(internalErrorMessage))
 
 	_, err := rr.GetRoom(ctx, mock.Anything)
 
@@ -203,7 +205,7 @@ func TestRemoveRoomForParticipantsSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "first1", "last1"}}); err != nil {
+	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1","", "", ""}}); err != nil {
 		t.Errorf(errorMessage)
 	}
 	sessionMock.AssertExpectations(t)
@@ -216,7 +218,7 @@ func TestRemoveRoomForParticipantsFail(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(errors.New(internalErrorMessage))
 
-	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "first1", "last1"}}); err == nil {
+	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "", "", ""}}); err == nil {
 		t.Errorf(errorMessage2)
 	}
 	sessionMock.AssertExpectations(t)
@@ -270,6 +272,62 @@ func TestRemoveParticipantFromRoomAndRemoveRoomForParticipantSuccess(t *testing.
 
 	if err := rr.RemoveParticipantFromRoomAndRemoveRoomForParticipant(ctx, mock.Anything, mock.Anything); err != nil {
 		t.Errorf(errorMessage)
+	}
+	sessionMock.AssertExpectations(t)
+	resetFields()
+}
+
+func TestGetChatRoomsByClassSuccess(t *testing.T) {
+	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
+	queryMock.On("WithContext", ctx).Return(queryMock)
+	queryMock.On("Consistency", mock.Anything).Return(queryMock)
+	queryMock.On("Iter").Return(mockIter)
+	mockIter.On("Scanner").Return(scannerMock)
+	scannerMock.On("Next").Return(true).Once()
+	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(nil).Once()
+	scannerMock.On("Next").Return(false).Once()
+	scannerMock.On("Err").Return(nil).Once()
+
+	if _,err := rr.GetChatRoomsByClass(ctx, mock.Anything); err != nil {
+		t.Errorf(errorMessage)
+	}
+	sessionMock.AssertExpectations(t)
+	resetFields()
+}
+
+func TestGetChatRoomsByClassFailScan(t *testing.T) {
+	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
+	queryMock.On("WithContext", ctx).Return(queryMock)
+	queryMock.On("Consistency", mock.Anything).Return(queryMock)
+	queryMock.On("Iter").Return(mockIter)
+	mockIter.On("Scanner").Return(scannerMock)
+	scannerMock.On("Next").Return(true).Once()
+
+	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(errors.New(internalErrorMessage)).Once()
+
+	if _,err := rr.GetChatRoomsByClass(ctx, mock.Anything); err == nil {
+		t.Errorf(errorMessage2)
+	}
+	sessionMock.AssertExpectations(t)
+	resetFields()
+}
+
+func TestGetChatRoomsByClassFailCloseScan(t *testing.T) {
+	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
+	queryMock.On("WithContext", ctx).Return(queryMock)
+	queryMock.On("Consistency", mock.Anything).Return(queryMock)
+	queryMock.On("Iter").Return(mockIter)
+	mockIter.On("Scanner").Return(scannerMock)
+	scannerMock.On("Next").Return(true).Once()
+	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+	scannerMock.On("Next").Return(false).Once()
+	scannerMock.On("Err").Return(errors.New(internalErrorMessage))
+
+	if _,err := rr.GetChatRoomsByClass(ctx, mock.Anything); err == nil {
+		t.Errorf(errorMessage2)
 	}
 	sessionMock.AssertExpectations(t)
 	resetFields()

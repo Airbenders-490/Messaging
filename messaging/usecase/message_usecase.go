@@ -7,7 +7,6 @@ import (
 	"chat/utils/errors"
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"text/template"
 	"time"
@@ -158,13 +157,17 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 		return errors.NewNotFoundError("User does not exist")
 	}
 
-	return u.mailer.SendSimpleMail(student.Email, createEmailBody(student, roomID))
+	emailBody, err := createEmailBody(student, roomID)
+	if err != nil {
+		return err
+	}
+	return u.mailer.SendSimpleMail(student.Email, emailBody)
 }
 
-func createEmailBody(student *domain.Student, team string) []byte {
+func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 	t, err := template.ParseFiles("./static/rejection_template.html")
 	if err != nil {
-		log.Fatalln(err)
+		return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file %s", err))
 	}
 
 	var body bytes.Buffer
@@ -184,5 +187,5 @@ func createEmailBody(student *domain.Student, team string) []byte {
 		Team:  team,
 	})
 
-	return body.Bytes()
+	return body.Bytes(), nil
 }

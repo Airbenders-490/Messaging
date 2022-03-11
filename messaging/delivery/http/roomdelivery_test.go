@@ -272,3 +272,50 @@ func TestDeleteRoom(t *testing.T) {
 		mockRoomUseCase.AssertExpectations(t)
 	})
 }
+
+func TestGetChatRoomsByClass(t *testing.T) {
+	router := gin.Default()
+	router.GET("/rooms/class/:className", rh.GetChatRoomsByClass)
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	t.Run("GetChatRoomsByClass Success", func(t *testing.T) {
+		mockRoomUseCase.
+			On("GetChatRoomsByClass", mock.Anything, mock.Anything).
+			Return([]domain.ChatRoom{}, nil).
+			Once()
+
+		myUrl, err := url.Parse(fmt.Sprintf("%s/rooms/class/office", server.URL))
+		request := http.Request{Method: "GET", URL: myUrl}
+		response, err := server.Client().Do(&request)
+		assert.NoError(t, err)
+		defer response.Body.Close()
+
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+		_, err = ioutil.ReadAll(response.Body)
+		if err != nil {
+			assert.Fail(t, readFailureMessage)
+		}
+		mockRoomUseCase.AssertExpectations(t)
+	})
+
+	t.Run("GetChatRoomsByClass error", func(t *testing.T) {
+		mockRoomUseCase.
+			On("GetChatRoomsByClass", mock.Anything, mock.Anything).
+			Return(nil, errors.NewInternalServerError("")).
+			Once()
+
+		myUrl, err := url.Parse(fmt.Sprintf("%s/rooms/class/office", server.URL))
+		request := http.Request{Method: "GET", URL: myUrl}
+		response, err := server.Client().Do(&request)
+		assert.NoError(t, err)
+		defer response.Body.Close()
+
+		assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+		_, err = ioutil.ReadAll(response.Body)
+		if err != nil {
+			assert.Fail(t, readFailureMessage)
+		}
+		mockRoomUseCase.AssertExpectations(t)
+	})
+}

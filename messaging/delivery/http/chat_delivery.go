@@ -262,11 +262,6 @@ func (h *MessageHandler) LoadMessages(c *gin.Context) {
 		limit = int(i)
 	}
 
-	if room == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(missingIdError))
-		return
-	}
-
 	var message domain.Message
 	err = c.ShouldBindJSON(&message)
 	if err != nil {
@@ -287,13 +282,6 @@ func (h *MessageHandler) LoadMessages(c *gin.Context) {
 }
 
 func (h *MessageHandler) EditMessage(c *gin.Context) {
-	room := c.Param("roomID")
-
-	if room == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(missingIdError))
-		return
-	}
-
 	key, _ := c.Get("loggedID")
 	loggedID, _ := key.(string)
 
@@ -324,11 +312,6 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 
 func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	room := c.Param("roomID")
-
-	if room == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(missingIdError))
-		return
-	}
 
 	key, _ := c.Get("loggedID")
 	loggedID, _ := key.(string)
@@ -375,7 +358,7 @@ func (h *MessageHandler) JoinRequest(c *gin.Context) {
 	c.JSON(http.StatusOK, httputils.NewResponse("Join Request Sent"))
 }
 
-func (h *MessageHandler) RejectRequest(c *gin.Context) {
+func (h *MessageHandler) RejectJoinRequest(c *gin.Context) {
 	roomID := c.Param("roomID")
 	userID := c.Param("userID")
 

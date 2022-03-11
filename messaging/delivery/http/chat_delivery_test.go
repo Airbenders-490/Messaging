@@ -402,3 +402,78 @@ func TestDeleteMessage(t *testing.T) {
 	})
 
 }
+
+func TestJoinRequest(t *testing.T) {
+	mockUseCase := new(mocks.MessageUseCase)
+	mh := http.NewMessageHandler(mockUseCase)
+	mw := new(mocks.MiddlewareMock)
+	r := app.Server(mh, nil, mw)
+
+	t.Run("success", func(t *testing.T) {
+		mockUseCase.On("JoinRequest", mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything).
+			Return(nil).Once()
+
+		reader := strings.NewReader("")
+		reqFound := httptest.NewRequest("POST", fmt.Sprintf("/api/chat/joinRequest/%s",
+			"office"), reader)
+
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, reqFound)
+		assert.Equal(t, 200, w.Code)
+		mockUseCase.AssertExpectations(t)
+	})
+
+	t.Run(restError, func(t *testing.T) {
+		restErr := errors.NewConflictError(errorOccurredMessage)
+		mockUseCase.On("JoinRequest", mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything).Return(restErr).Once()
+
+		reader := strings.NewReader("")
+		reqFound := httptest.NewRequest("POST", fmt.Sprintf("/api/chat/joinRequest/%s",
+			"office"), reader)
+
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, reqFound)
+		assert.Equal(t, restErr.Code, w.Code)
+		mockUseCase.AssertExpectations(t)
+	})
+}
+
+func TestRejectJoinRequest(t *testing.T) {
+	mockUseCase := new(mocks.MessageUseCase)
+	mh := http.NewMessageHandler(mockUseCase)
+	mw := new(mocks.MiddlewareMock)
+	r := app.Server(mh, nil, mw)
+
+	t.Run("success", func(t *testing.T) {
+		mockUseCase.On("SendRejection", mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything).
+			Return(nil).Once()
+
+		reader := strings.NewReader("")
+		reqFound := httptest.NewRequest("POST", fmt.Sprintf("/api/chat/rejectRequest/%s/%s",
+			"room", "user"), reader)
+
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, reqFound)
+		assert.Equal(t, 200, w.Code)
+		mockUseCase.AssertExpectations(t)
+	})
+
+	t.Run(restError, func(t *testing.T) {
+		restErr := errors.NewConflictError(errorOccurredMessage)
+		mockUseCase.On("SendRejection", mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything).
+			Return(restErr).Once()
+
+		reader := strings.NewReader("")
+		reqFound := httptest.NewRequest("POST", fmt.Sprintf("/api/chat/rejectRequest/%s/%s",
+			"room", "user"), reader)
+
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, reqFound)
+		assert.Equal(t, restErr.Code, w.Code)
+		mockUseCase.AssertExpectations(t)
+	})
+}
