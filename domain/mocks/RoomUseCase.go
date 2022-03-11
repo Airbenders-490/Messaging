@@ -66,12 +66,12 @@ func (_m *RoomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*dom
 }
 
 // RemoveUserFromRoom provides a mock function with given fields: ctx, roomID, userID
-func (_m *RoomUseCase) RemoveUserFromRoom(ctx context.Context, roomID string, userID string) error {
-	ret := _m.Called(ctx, roomID, userID)
+func (_m *RoomUseCase) RemoveUserFromRoom(ctx context.Context, roomID string, userID string, loggedID string) error {
+	ret := _m.Called(ctx, roomID, userID, loggedID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, roomID, userID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
+		r0 = rf(ctx, roomID, userID, loggedID)
 	} else {
 		r0 = ret.Error(0)
 	}

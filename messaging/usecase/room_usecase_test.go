@@ -114,10 +114,13 @@ func TestRemoveUserFromRoom(t *testing.T) {
 
 	t.Run(caseSuccess, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
+		mockRoomRepo.On("GetRoom",mock.Anything, mock.Anything).
+			Return(&mockRoom, nil).
+			Once()
 		mockRoomRepo.On("RemoveParticipantFromRoomAndRemoveRoomForParticipant",mock.Anything,mock.AnythingOfType("string"),mock.AnythingOfType("string")).
 			Return(nil).Once()
 		u := NewRoomUseCase(mockRoomRepo,mockStudentRepo,time.Second)
-		err:=u.RemoveUserFromRoom(context.TODO(),mockRoom.RoomID,mockStudent.ID)
+		err:=u.RemoveUserFromRoom(context.TODO(),mockRoom.RoomID,mockStudent.ID, mockStudent.ID)
 		assert.NoError(t, err)
 		mockRoomRepo.AssertExpectations(t)
 
@@ -125,10 +128,13 @@ func TestRemoveUserFromRoom(t *testing.T) {
 
 	t.Run(caseErrorInRepo, func(t *testing.T) {
 		resetRoomUsecaseTestFields()
+		mockRoomRepo.On("GetRoom",mock.Anything, mock.Anything).
+			Return(&mockRoom, nil).
+			Once()
 		mockRoomRepo.On("RemoveParticipantFromRoomAndRemoveRoomForParticipant",mock.Anything,mock.AnythingOfType("string"),mock.AnythingOfType("string")).
 			Return(errors.New("error")).Once()
 		u := NewRoomUseCase(mockRoomRepo,mockStudentRepo,time.Second)
-		err:=u.RemoveUserFromRoom(context.TODO(),mockRoom.RoomID,mockStudent.ID)
+		err:=u.RemoveUserFromRoom(context.TODO(),mockRoom.RoomID,mockStudent.ID,mockRoom.Admin.ID)
 		assert.Error(t, err)
 		mockRoomRepo.AssertExpectations(t)
 	})

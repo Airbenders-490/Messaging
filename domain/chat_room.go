@@ -51,7 +51,7 @@ type RoomUseCase interface {
 	// SaveRoom needs to save not just the room, but also add the chatroom for all the students
 	SaveRoom(ctx context.Context, room *ChatRoom) error
 	AddUserToRoom(ctx context.Context, roomID string, userID string) error
-	RemoveUserFromRoom(ctx context.Context, roomID string, userID string) error
+	RemoveUserFromRoom(ctx context.Context, roomID string, userID string, loggedID string) error
 	GetChatRoomsFor(ctx context.Context, userID string) (*StudentChatRooms, error)
 	// DeleteRoom Ensure the user deleting is the admin
 	DeleteRoom(ctx context.Context, userID string, roomID string) error
