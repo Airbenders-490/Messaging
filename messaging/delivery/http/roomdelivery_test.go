@@ -144,7 +144,7 @@ func TestRemoveUserFromRoom(t *testing.T) {
 
 	t.Run("RemoveUserFromRoom Success", func(t *testing.T) {
 		mockRoomUseCase.
-			On("RemoveUserFromRoom", mock.Anything, mock.Anything, mock.Anything).
+			On("RemoveUserFromRoom", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 
@@ -164,7 +164,7 @@ func TestRemoveUserFromRoom(t *testing.T) {
 
 	t.Run("Fail: RemoveUserFromRoom error", func(t *testing.T) {
 		mockRoomUseCase.
-			On("RemoveUserFromRoom", mock.Anything, mock.Anything, mock.Anything).
+			On("RemoveUserFromRoom", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.NewInternalServerError("")).
 			Once()
 
