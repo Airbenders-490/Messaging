@@ -1,15 +1,21 @@
 package usecase
 
 import (
+	"bytes"
 	"chat/domain"
+	"chat/utils"
 	"chat/utils/errors"
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"text/template"
 	"time"
 )
 
 type messageUseCase struct {
 	timeout           time.Duration
+	mailer  		  utils.Mailer
 	messageRepository domain.MessageRepository
 	roomRepository    domain.RoomRepository
 	studentRepository domain.StudentRepository
@@ -20,8 +26,9 @@ func NewMessageUseCase(
 	t time.Duration,
 	mr domain.MessageRepository,
 	rr domain.RoomRepository,
-	sr domain.StudentRepository) domain.MessageUseCase {
-	return &messageUseCase{timeout: t, messageRepository: mr, roomRepository: rr, studentRepository: sr}
+	sr domain.StudentRepository,
+	mailer utils.Mailer) domain.MessageUseCase {
+	return &messageUseCase{timeout: t, messageRepository: mr, roomRepository: rr, studentRepository: sr, mailer: mailer}
 }
 
 func (u *messageUseCase) IsAuthorized(ctx context.Context, userID, roomID string) (authorized bool) {
@@ -131,4 +138,51 @@ func (u *messageUseCase) JoinRequest(ctx context.Context, roomID string, userID 
 		MessageBody: fmt.Sprintf("%s %s has requested to join your group.", student.FirstName, student.LastName)}
 
 	return u.messageRepository.SaveMessage(c, &m)
+}
+
+func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userID string, loggedID string) error {
+	c, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
+
+	room, err := u.roomRepository.GetRoom(c, roomID)
+	if err != nil {
+		return errors.NewNotFoundError("Room does not exist")
+	}
+
+	if loggedID != room.Admin.ID {
+		return errors.NewUnauthorizedError("You are not authorized to reject because you are not admin.")
+	}
+
+	student, err := u.studentRepository.GetStudent(c, userID)
+	if err != nil {
+		return errors.NewNotFoundError("User does not exist")
+	}
+
+	return u.mailer.SendSimpleMail(student.Email, createEmailBody(student, roomID))
+}
+
+func createEmailBody(student *domain.Student, team string) []byte {
+	t, err := template.ParseFiles("./static/rejection_template.html")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var body bytes.Buffer
+
+	message := fmt.Sprintf("From: %s\r\n", os.Getenv("EMAIL_FROM"))
+	message += fmt.Sprintf("To: %s\r\n", student.Email)
+	message += "Subject: Team Request\r\n"
+	message += "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+	message += "\r\n"
+
+	body.Write([]byte(message))
+	t.Execute(&body, struct {
+		Name   string
+		Team  string
+	}{
+		Name:   student.FirstName,
+		Team:  team,
+	})
+
+	return body.Bytes()
 }

@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS chat.student_rooms (
 CREATE TABLE IF NOT EXISTS chat.student (
     student_id text PRIMARY KEY,
     first_name text,
-    last_name text
+    last_name text,
+    email text
 );
 
 -- michael is eaf54fae-1ab8-4b5a-8047-51904f6ae884
@@ -38,10 +39,10 @@ INSERT INTO chat.student_rooms (student, rooms) VALUES ('toby', {'office'});
 INSERT INTO chat.room (roomid, admin, name, students, class) VALUES ('allstars', '172ff420-f0eb-4d75-a26b-8d058a8499ec' , 'allstars', {'172ff420-f0eb-4d75-a26b-8d058a8499ec', 'jim'}, 'soen385');
 INSERT INTO chat.student_rooms (student, rooms) VALUES ('172ff420-f0eb-4d75-a26b-8d058a8499ec', {'allstars', 'office'});
 INSERT INTO chat.student_rooms (student, rooms) VALUES ('jim', {'allstars'});
-INSERT INTO chat.student (student_id, first_name, last_name) VALUES ('jim', 'jim', 'halpert');
-INSERT INTO chat.student (student_id, first_name, last_name) VALUES ('eaf54fae-1ab8-4b5a-8047-51904f6ae884', 'michael', 'scott');
-INSERT INTO chat.student (student_id, first_name, last_name) VALUES ('172ff420-f0eb-4d75-a26b-8d058a8499ec', 'dwight', 'schrute');
-INSERT INTO chat.student (student_id, first_name, last_name) VALUES ('toby', 'toby', 'flenderson');
-INSERT INTO chat.student (student_id, first_name, last_name) VALUES ('pam', 'pam', 'beesly');
-INSERT INTO chat.student (student_id, first_name, last_name) VALUES ('kevin', 'kevin', 'malone');
-INSERT INTO chat.student (student_id, first_name, last_name) VALUES ('angela', 'angela', 'martin');
+INSERT INTO chat.student (student_id, first_name, last_name, email) VALUES ('jim', 'jim', 'halpert', 'jimhalpert@gmail.com');
+INSERT INTO chat.student (student_id, first_name, last_name, email) VALUES ('eaf54fae-1ab8-4b5a-8047-51904f6ae884', 'michael', 'scott', 'michaelscott@gmail.com');
+INSERT INTO chat.student (student_id, first_name, last_name, email) VALUES ('172ff420-f0eb-4d75-a26b-8d058a8499ec', 'dwight', 'schrute', 'dwightschrute@gmail.com');
+INSERT INTO chat.student (student_id, first_name, last_name, email) VALUES ('toby', 'toby', 'flenderson', 'tobyflenderson@gmail.com');
+INSERT INTO chat.student (student_id, first_name, last_name, email) VALUES ('pam', 'pam', 'beesly', 'pambeesly@gmail.com');
+INSERT INTO chat.student (student_id, first_name, last_name, email) VALUES ('kevin', 'kevin', 'malone', 'kevinmalone@gmail.com');
+INSERT INTO chat.student (student_id, first_name, last_name, email) VALUES ('angela', 'angela', 'martin', 'angelamartin@gmail.com');

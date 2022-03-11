@@ -30,4 +30,5 @@ type MessageUseCase interface {
 	DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time, userID string) error
 	IsAuthorized(ctx context.Context, userID, roomID string) bool
 	JoinRequest(ctx context.Context, roomID string, userID string, timeStamp time.Time) error
+	SendRejection(ctx context.Context, roomID string, userID string, loggedID string) error
 }

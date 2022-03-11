@@ -372,5 +372,24 @@ func (h *MessageHandler) JoinRequest(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, httputils.NewResponse("Request Sent"))
+	c.JSON(http.StatusOK, httputils.NewResponse("Join Request Sent"))
+}
+
+func (h *MessageHandler) RejectRequest(c *gin.Context) {
+	roomID := c.Param("roomID")
+	userID := c.Param("userID")
+
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
+
+	ctx := c.Request.Context()
+
+	err := h.u.SendRejection(ctx, roomID, userID, loggedID)
+
+	if err != nil {
+		errors.SetRESTError(err, c)
+		return
+	}
+
+	c.JSON(http.StatusOK, httputils.NewResponse("Decline Join Request Sent"))
 }
