@@ -66,7 +66,7 @@ func TestDeleteStudentSuccess(t *testing.T) {
 func TestGetStudentSuccess(t *testing.T) {
 	resetStudentRepoFields()
 
-	sessionMock.On("Query",mock.Anything, mock.Anything).Return(queryMock)
+	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
 	queryMock.On("WithContext", ctx).Return(queryMock)
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)

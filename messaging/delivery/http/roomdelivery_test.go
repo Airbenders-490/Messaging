@@ -22,6 +22,7 @@ var mockRoom domain.ChatRoom
 var mockRoomUseCase = new(mocks.RoomUseCase)
 var rh = NewRoomHandler(mockRoomUseCase)
 var contentType = "application/json"
+
 const postRoomPath = "%s/rooms"
 const readFailureMessage = "failed to read from message"
 

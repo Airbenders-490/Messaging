@@ -14,7 +14,7 @@ import (
 
 type messageUseCase struct {
 	timeout           time.Duration
-	mailer  		  utils.Mailer
+	mailer            utils.Mailer
 	messageRepository domain.MessageRepository
 	roomRepository    domain.RoomRepository
 	studentRepository domain.StudentRepository
@@ -131,10 +131,10 @@ func (u *messageUseCase) JoinRequest(ctx context.Context, roomID string, userID 
 	}
 
 	m := domain.Message{
-		RoomID: roomID,
+		RoomID:        roomID,
 		SentTimestamp: timeStamp,
 		FromStudentID: userID,
-		MessageBody: fmt.Sprintf("%s %s has requested to join your group.", student.FirstName, student.LastName)}
+		MessageBody:   fmt.Sprintf("%s %s has requested to join your group.", student.FirstName, student.LastName)}
 
 	return u.messageRepository.SaveMessage(c, &m)
 }
@@ -180,11 +180,11 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 
 	body.Write([]byte(message))
 	t.Execute(&body, struct {
-		Name   string
-		Team  string
+		Name string
+		Team string
 	}{
-		Name:   student.FirstName,
-		Team:  team,
+		Name: student.FirstName,
+		Team: team,
 	})
 
 	return body.Bytes(), nil

@@ -234,7 +234,6 @@ func TestLoadMessages(t *testing.T) {
 		mockUseCase.AssertExpectations(t)
 	})
 
-
 	t.Run(restError, func(t *testing.T) {
 		restErr := errors.NewConflictError(errorOccurredMessage)
 		mockUseCase.On("GetMessages", mock.Anything, mock.AnythingOfType("string"),

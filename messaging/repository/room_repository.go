@@ -109,7 +109,7 @@ func (r RoomRepository) GetRoomsFor(ctx context.Context, userID string) (*domain
 }
 
 func (r RoomRepository) GetChatRoomsByClass(ctx context.Context, className string) ([]domain.ChatRoom, error) {
-	retrievedChatRooms := make([]domain.ChatRoom,0)
+	retrievedChatRooms := make([]domain.ChatRoom, 0)
 	var scanner cassandra.ScannerInterface
 	var studentIDs []string
 	scanner = r.dbSession.Query(getChatRoomsByClass, className).WithContext(ctx).Consistency(gocql.One).Iter().Scanner()

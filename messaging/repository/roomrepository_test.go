@@ -18,6 +18,7 @@ var rr = NewRoomRepository(sessionMock)
 var room = &domain.ChatRoom{
 	Students: []domain.Student{{ID: "userID1"}},
 }
+
 const errorMessage = "Actual error, expected no error"
 const internalErrorMessage = "Internal Error"
 const errorMessage2 = "Actual no error, expected error"
@@ -205,7 +206,7 @@ func TestRemoveRoomForParticipantsSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1","", "", ""}}); err != nil {
+	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "", "", ""}}); err != nil {
 		t.Errorf(errorMessage)
 	}
 	sessionMock.AssertExpectations(t)
@@ -289,7 +290,7 @@ func TestGetChatRoomsByClassSuccess(t *testing.T) {
 	scannerMock.On("Next").Return(false).Once()
 	scannerMock.On("Err").Return(nil).Once()
 
-	if _,err := rr.GetChatRoomsByClass(ctx, mock.Anything); err != nil {
+	if _, err := rr.GetChatRoomsByClass(ctx, mock.Anything); err != nil {
 		t.Errorf(errorMessage)
 	}
 	sessionMock.AssertExpectations(t)
@@ -307,7 +308,7 @@ func TestGetChatRoomsByClassFailScan(t *testing.T) {
 	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(errors.New(internalErrorMessage)).Once()
 
-	if _,err := rr.GetChatRoomsByClass(ctx, mock.Anything); err == nil {
+	if _, err := rr.GetChatRoomsByClass(ctx, mock.Anything); err == nil {
 		t.Errorf(errorMessage2)
 	}
 	sessionMock.AssertExpectations(t)
@@ -326,7 +327,7 @@ func TestGetChatRoomsByClassFailCloseScan(t *testing.T) {
 	scannerMock.On("Next").Return(false).Once()
 	scannerMock.On("Err").Return(errors.New(internalErrorMessage))
 
-	if _,err := rr.GetChatRoomsByClass(ctx, mock.Anything); err == nil {
+	if _, err := rr.GetChatRoomsByClass(ctx, mock.Anything); err == nil {
 		t.Errorf(errorMessage2)
 	}
 	sessionMock.AssertExpectations(t)

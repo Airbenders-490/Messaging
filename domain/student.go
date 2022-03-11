@@ -7,7 +7,7 @@ type Student struct {
 	ID        string `json:"id"` //uuid string
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Email 	  string `json:"email"`
+	Email     string `json:"email"`
 }
 
 // StudentRepository implements the contract for student repository. We only save and get a student here

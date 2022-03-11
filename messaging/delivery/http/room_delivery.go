@@ -23,7 +23,7 @@ func NewRoomHandler(ru domain.RoomUseCase) *RoomHandler {
 func (h *RoomHandler) SaveRoom(c *gin.Context) {
 	key, _ := c.Get("loggedID")
 	loggedID, _ := key.(string)
-	student := domain.Student{ ID: loggedID }
+	student := domain.Student{ID: loggedID}
 
 	var room domain.ChatRoom
 	err := c.ShouldBindJSON(&room)
@@ -101,7 +101,7 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 	c.JSON(http.StatusAccepted, httputils.NewResponse("Room Deleted"))
 }
 
-func (h *RoomHandler) GetChatRoomsByClass (c *gin.Context) {
+func (h *RoomHandler) GetChatRoomsByClass(c *gin.Context) {
 	className := strings.ToLower(c.Params.ByName("className"))
 
 	ctx := c.Request.Context()

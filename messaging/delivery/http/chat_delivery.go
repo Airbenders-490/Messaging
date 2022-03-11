@@ -82,7 +82,7 @@ type hub struct {
 var (
 	singleton hub
 	once      sync.Once
-	mainHub = NewHub()
+	mainHub   = NewHub()
 )
 
 func NewHub() hub {
