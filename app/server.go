@@ -1,6 +1,9 @@
 package app
 
 import (
+	http2 "chat/Room/delivery/http"
+	roomRepository "chat/Room/repository"
+	roomUseCase "chat/Room/usecase"
 	"chat/messaging/delivery/http"
 	"chat/messaging/repository"
 	"chat/messaging/repository/cassandra"
@@ -12,9 +15,10 @@ import (
 	"time"
 )
 
-func Server(mh *http.MessageHandler, rh *http.RoomHandler, mw Middleware) *gin.Engine {
+func Server(mh *http.MessageHandler, rh *http2.RoomHandler, mw Middleware) *gin.Engine {
 	router := gin.Default()
-	mapUrls(mw, router, mh, rh)
+	mapChatUrls(mw, router, mh)
+	mapRoomURLs(mw, router, rh)
 	return router
 }
 
@@ -30,14 +34,14 @@ func Start() {
 
 
 	mr := repository.NewChatRepository(cassandra.NewSession(session))
-	rr := repository.NewRoomRepository(cassandra.NewSession(session))
-	sr := repository.NewStudentRepository(cassandra.NewSession(session))
+	rr := roomRepository.NewRoomRepository(cassandra.NewSession(session))
+	sr := roomRepository.NewStudentRepository(cassandra.NewSession(session))
 
 	mu := usecase.NewMessageUseCase(time.Second*2, mr, rr)
-	ru := usecase.NewRoomUseCase(rr, sr, time.Second*2)
+	ru := roomUseCase.NewRoomUseCase(rr, sr, time.Second*2)
 
 	mh := http.NewMessageHandler(mu)
-	rh := http.NewRoomHandler(ru)
+	rh := http2.NewRoomHandler(ru)
 
 	su := usecase.NewStudentUseCase(*sr)
 
