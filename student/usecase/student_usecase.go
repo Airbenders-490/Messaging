@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"chat/Room/repository"
 	"chat/domain"
+	"chat/student/repository"
 	"context"
 	"encoding/json"
 	"github.com/streadway/amqp"

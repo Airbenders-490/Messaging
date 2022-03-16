@@ -1,13 +1,15 @@
 package app
 
 import (
-	http2 "chat/Room/delivery/http"
-	roomRepository "chat/Room/repository"
-	roomUseCase "chat/Room/usecase"
 	"chat/messaging/delivery/http"
 	"chat/messaging/repository"
 	"chat/messaging/repository/cassandra"
 	"chat/messaging/usecase"
+	http2 "chat/room/delivery/http"
+	roomRepository "chat/room/repository"
+	roomUseCase "chat/room/usecase"
+	studentRepository "chat/student/repository"
+	studentUseCase "chat/student/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
 	"log"
@@ -35,7 +37,7 @@ func Start() {
 
 	mr := repository.NewChatRepository(cassandra.NewSession(session))
 	rr := roomRepository.NewRoomRepository(cassandra.NewSession(session))
-	sr := roomRepository.NewStudentRepository(cassandra.NewSession(session))
+	sr := studentRepository.NewStudentRepository(cassandra.NewSession(session))
 
 	mu := usecase.NewMessageUseCase(time.Second*2, mr, rr)
 	ru := roomUseCase.NewRoomUseCase(rr, sr, time.Second*2)
@@ -43,7 +45,7 @@ func Start() {
 	mh := http.NewMessageHandler(mu)
 	rh := http2.NewRoomHandler(ru)
 
-	su := usecase.NewStudentUseCase(*sr)
+	su := studentUseCase.NewStudentUseCase(*sr)
 
 	go su.ListenStudentCreation()
 	go su.ListenStudentEdit()

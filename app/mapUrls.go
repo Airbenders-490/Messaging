@@ -1,7 +1,7 @@
 package app
 
 import (
-	roomHttp "chat/Room/delivery/http"
+	roomHttp "chat/room/delivery/http"
 	"chat/messaging/delivery/http"
 	"github.com/gin-gonic/gin"
 	"math/rand"
