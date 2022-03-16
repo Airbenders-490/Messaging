@@ -6,11 +6,13 @@ import (
 	"chat/utils/httputils"
 	"context"
 	"encoding/json"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -169,7 +171,24 @@ func (c *connection) write(mt int, payload []byte) error {
 // ServeWs is the handleFunc for connecting to a room's websocket. A user must be authorized, i.e. already added to
 // the room before he can connect to the room. Otherwise, returns 401.
 func (h *MessageHandler) ServeWs(w http.ResponseWriter, r *http.Request, roomID string, userID string, ctx context.Context) {
-	authorized := h.u.IsAuthorized(ctx, userID, roomID)
+
+	tokenParam, ok := r.URL.Query()["token"]
+
+	if !ok || len(tokenParam[0]) < 1 {
+		log.Println("Url Param 'token' is missing")
+		return
+	}
+	tokenString := r.URL.Query()["token"][0]
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("SECRET_KEY")), nil
+	})
+	if err != nil {
+		log.Println("NOT logged in")
+		return
+	}
+	standardClaims := token.Claims.(*jwt.StandardClaims)
+
+	authorized := h.u.IsAuthorized(ctx, standardClaims.Issuer, roomID)
 	if !authorized {
 		w.WriteHeader(http.StatusUnauthorized)
 		io.WriteString(w, "Not authorized to enter the room number "+roomID)
