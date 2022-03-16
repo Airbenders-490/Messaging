@@ -9,17 +9,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bxcodec/faker/v3"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 	"time"
 )
 
-const chatRoomAddr = "%s/chat/%s"
+const chatRoomPath = "%s/chat/%s%s"
 const messageBody = "Hello sir!"
 const putChatPath = "/api/chat/%s"
 const invalidDataMessage = "invalid data"
@@ -46,8 +48,14 @@ func TestMessageSending(t *testing.T) {
 	addr.Scheme = "ws"
 	mainHub := http.NewHub()
 	go mainHub.StartHubListener()
-	const validChatRoomID = "1"
-	const invalidChatRoomID = "2"
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Issuer:    "1",                               // reserved claim
+	})
+	signedToken, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+
+	var tokenQuery = fmt.Sprintf("?token=%s", signedToken)
+	var validChatRoomID = "1"
+	var invalidChatRoomID =  "2"
 	t.Run("success", func(t *testing.T) {
 		// return only twice since connecting twice
 		mockMessageUsecase.
@@ -55,12 +63,12 @@ func TestMessageSending(t *testing.T) {
 			Return(true).Twice()
 		// establish a connection. This is our "monitor" connection. We will send messages to this chat-room and
 		// monitor this to read a valid response
-		wsDefault, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomAddr, addr.String(), validChatRoomID), nil)
+		wsDefault, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomPath, addr.String(), validChatRoomID, tokenQuery), nil)
 		if err != nil {
 			assert.Fail(t, err.Error())
 		}
 
-		ws, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomAddr, addr.String(), validChatRoomID), nil)
+		ws, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomPath, addr.String(), validChatRoomID, tokenQuery), nil)
 		if err != nil {
 			assert.Fail(t, err.Error())
 		}
@@ -90,7 +98,7 @@ func TestMessageSending(t *testing.T) {
 			Return(false).Once()
 		// establish a connection. This is our "monitor" connection. We will send messages to this chat-room and
 		// monitor this to read a valid response
-		_, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomAddr, addr.String(), validChatRoomID), nil)
+		_, _, err = websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomPath, addr.String(), validChatRoomID, tokenQuery), nil)
 		assert.Error(t, err)
 	})
 
@@ -103,13 +111,13 @@ func TestMessageSending(t *testing.T) {
 		// establish a connection. This is our "monitor" connection. We will send messages to this chat-room and
 		// monitor this to read a valid response. In this case, nothing should be received after closing the conn
 		// register the reader and then unregister
-		wsDefault, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomAddr, addr.String(), validChatRoomID), nil)
+		wsDefault, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomPath, addr.String(), validChatRoomID, tokenQuery), nil)
 		if err != nil {
 			assert.Fail(t, err.Error())
 		}
 		_ = wsDefault.Close()
 
-		ws, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomAddr, addr.String(), validChatRoomID), nil)
+		ws, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomPath, addr.String(), validChatRoomID, tokenQuery), nil)
 		if err != nil {
 			assert.Fail(t, err.Error())
 		}
@@ -133,12 +141,12 @@ func TestMessageSending(t *testing.T) {
 			Return(true).Twice()
 		// establish a connection. This is our "monitor" connection. We will send messages to this chat-room and
 		// monitor this to read a valid response
-		wsDefault, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomAddr, addr.String(), validChatRoomID), nil)
+		wsDefault, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomPath, addr.String(), validChatRoomID, tokenQuery), nil)
 		if err != nil {
 			assert.Fail(t, err.Error())
 		}
 
-		ws, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomAddr, addr.String(), invalidChatRoomID), nil)
+		ws, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomPath, addr.String(), invalidChatRoomID, tokenQuery), nil)
 		if err != nil {
 			assert.Fail(t, err.Error())
 		}

@@ -258,6 +258,62 @@ func TestDeleteMessage(t *testing.T) {
 	})
 }
 
+func TestIsAuthorized(t *testing.T) {
+	t.Parallel()
+	mockMailer := new(mocks2.Mailer)
+	mockMessageRepository := new(mocks.MessageRepository)
+	mockStudentRepository := new(mocks.StudentRepository)
+	mockRoomRepository := new(mocks.RoomRepository)
+	var mockStudent domain.Student
+	faker.FakeData(&mockStudent)
+	var mockMessage domain.Message
+	faker.FakeData(&mockMessage)
+	rooms := domain.StudentChatRooms{
+		Student: mockStudent,
+		Rooms:[]domain.ChatRoom {
+			{RoomID: "1"},
+			{RoomID: "2"},
+		},
+	}
+	u := NewMessageUseCase(time.Second*2, mockMessageRepository, mockRoomRepository,mockStudentRepository, mockMailer)
+
+	t.Run("success", func(t *testing.T) {
+		mockRoomRepository.
+			On("GetRoomsFor", mock.Anything, mock.AnythingOfType("string")).
+			Return(&rooms, nil).Once()
+
+		isAuthorized := u.IsAuthorized(context.TODO(), "", "1")
+
+		assert.Equal(t, true, isAuthorized)
+
+		mockRoomRepository.AssertExpectations(t)
+	})
+
+	t.Run("error: cannot get rooms", func(t *testing.T) {
+		mockRoomRepository.
+			On("GetRoomsFor", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, errors.New("error")).Once()
+
+		isAuthorized := u.IsAuthorized(context.TODO(), "", "1")
+
+		assert.Equal(t, false, isAuthorized)
+
+		mockRoomRepository.AssertExpectations(t)
+	})
+
+	t.Run("user does not belong to the room ", func(t *testing.T) {
+		mockRoomRepository.
+			On("GetRoomsFor", mock.Anything, mock.AnythingOfType("string")).
+			Return(&rooms, nil).Once()
+
+		isAuthorized := u.IsAuthorized(context.TODO(), "", "")
+
+		assert.Equal(t, false, isAuthorized)
+
+		mockRoomRepository.AssertExpectations(t)
+	})
+}
+
 func TestJoinRequest(t *testing.T) {
 	t.Parallel()
 	mockMessageRepository := new(mocks.MessageRepository)
