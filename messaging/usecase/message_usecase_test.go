@@ -274,7 +274,11 @@ func TestJoinRequest(t *testing.T) {
 
 		mockRoomRepository.
 			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
-			Return(nil, nil).Once()
+			Return(&mockRoom, nil).Once()
+
+		mockRoomRepository.
+			On("UpdateParticipantPendingState", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("bool")).
+			Return(nil).Once()
 
 		mockMessageRepository.
 			On("SaveMessage", mock.Anything, mock.Anything).
@@ -311,6 +315,45 @@ func TestJoinRequest(t *testing.T) {
 		assert.Error(t, err)
 		mockMessageRepository.AssertExpectations(t)
 	})
+
+	t.Run("error: user already in room", func(t *testing.T) {
+		students := []domain.Student{
+			{"","","",""},
+		}
+		room := &domain.ChatRoom{Students: students}
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(room, nil).Once()
+
+		err := u.JoinRequest(context.TODO(), "", "", time.Now())
+
+		assert.Error(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
+
+	t.Run("error: unable to update pending state", func(t *testing.T) {
+
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockRoom, nil).Once()
+
+		mockRoomRepository.
+			On("UpdateParticipantPendingState", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("bool")).
+			Return(errors.New("")).Once()
+
+		err := u.JoinRequest(context.TODO(), "", "", time.Now())
+
+		assert.Error(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
 }
 
 func TestSendRejection(t *testing.T) {
@@ -340,6 +383,10 @@ func TestSendRejection(t *testing.T) {
 		mockStudentRepository.
 			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
 			Return(&mockStudent, nil).Once()
+
+		mockRoomRepository.
+			On("RemoveParticipantFromRoom", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
+			Return(nil).Once()
 
 		mockMailer.
 			On("SendSimpleMail", mock.AnythingOfType("string"), mock.Anything).
@@ -403,6 +450,36 @@ func TestSendRejection(t *testing.T) {
 		mockStudentRepository.
 			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
 			Return(&mockStudent, nil).Once()
+
+		mockRoomRepository.
+			On("RemoveParticipantFromRoom", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
+			Return(nil).Once()
+
+		err = u.SendRejection(context.TODO(), "", "", "")
+
+		assert.Error(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
+
+	t.Run("error: unable to remove user from room", func(t *testing.T) {
+		// Go to incorrect file path, template.ParseFiles(filepath)
+		_, filename, _, _ := runtime.Caller(0)
+		dir := path.Join(path.Dir(filename), "..") // go to root dir
+		err := os.Chdir(dir)
+		if err != nil {
+			panic(err)
+		}
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockRoom, nil).Once()
+
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+
+		mockRoomRepository.
+			On("RemoveParticipantFromRoom", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
+			Return(errors.New("")).Once()
 
 		err = u.SendRejection(context.TODO(), "", "", "")
 

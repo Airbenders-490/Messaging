@@ -122,12 +122,23 @@ func (u *messageUseCase) JoinRequest(ctx context.Context, roomID string, userID 
 
 	student, err := u.studentRepository.GetStudent(c, userID)
 	if err != nil {
-		return errors.NewNotFoundError("Student does not exist")
+		return errors.NewNotFoundError(fmt.Sprintf("Student does not exist: %s", err.Error()))
 	}
 
-	_, err = u.roomRepository.GetRoom(c, roomID)
+	room, err := u.roomRepository.GetRoom(c, roomID)
 	if err != nil {
-		return errors.NewConflictError(fmt.Sprintf("Room with ID %s does not exist", roomID))
+		return errors.NewConflictError(fmt.Sprintf("Room with ID %s does not exist: %s", roomID, err.Error()))
+	}
+
+	for _, participant := range room.Students {
+		if participant.ID == userID {
+			return errors.NewConflictError(fmt.Sprintf("User %s is already in room", userID))
+		}
+	}
+
+	err = u.roomRepository.UpdateParticipantPendingState(c, roomID, userID, true)
+	if err != nil {
+		return errors.NewInternalServerError(fmt.Sprintf("Unable to update pending state: %s", err.Error()))
 	}
 
 	m := domain.Message{
@@ -157,9 +168,14 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 		return errors.NewNotFoundError("User does not exist")
 	}
 
+	err = u.roomRepository.RemoveParticipantFromRoom(c, userID, roomID)
+	if err != nil {
+		return errors.NewInternalServerError(fmt.Sprintf("Unable to remove user from room: %s", err.Error()))
+	}
+
 	emailBody, err := createEmailBody(student, roomID)
 	if err != nil {
-		return err
+		return errors.NewInternalServerError(fmt.Sprintf("Unable to create email: %s", err.Error()))
 	}
 	return u.mailer.SendSimpleMail(student.Email, emailBody)
 }

@@ -85,6 +85,21 @@ func TestSaveRoom(t *testing.T) {
 		assert.Error(t, err)
 		mockRoomRepo.AssertExpectations(t)
 	})
+
+	t.Run("error: participant does not exist", func(t *testing.T) {
+		resetRoomUsecaseTestFields()
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(nil, errors.New("error")).
+			Once()
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, errors.New("")).Once()
+		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
+		err := u.SaveRoom(context.TODO(), &mockRoom)
+		assert.Error(t, err)
+		mockRoomRepo.AssertExpectations(t)
+	})
 }
 
 func TestAddUserToRoom(t *testing.T) {
@@ -127,15 +142,23 @@ func TestRemoveUserFromRoom(t *testing.T) {
 
 	})
 
-	t.Run(caseErrorInRepo, func(t *testing.T) {
+	t.Run("error: room does not exist", func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 		mockRoomRepo.On("GetRoom",mock.Anything, mock.Anything).
-			Return(&mockRoom, nil).
-			Once()
-		mockRoomRepo.On("RemoveParticipantFromRoomAndRemoveRoomForParticipant",mock.Anything,mock.AnythingOfType("string"),mock.AnythingOfType("string")).
-			Return(errors.New("error")).Once()
+			Return(nil, errors.New("")).Once()
 		u := NewRoomUseCase(mockRoomRepo,mockStudentRepo,time.Second)
 		err:=u.RemoveUserFromRoom(context.TODO(),mockRoom.RoomID,mockStudent.ID,mockRoom.Admin.ID)
+
+		assert.Error(t, err)
+		mockRoomRepo.AssertExpectations(t)
+	})
+
+	t.Run("error: unauthorized", func(t *testing.T) {
+		resetRoomUsecaseTestFields()
+		mockRoomRepo.On("GetRoom",mock.Anything, mock.Anything).
+			Return(&mockRoom, nil).Once()
+		u := NewRoomUseCase(mockRoomRepo,mockStudentRepo,time.Second)
+		err:=u.RemoveUserFromRoom(context.TODO(),mockRoom.RoomID,"1","2")
 
 		assert.Error(t, err)
 		mockRoomRepo.AssertExpectations(t)
@@ -242,6 +265,37 @@ func TestGetChatRoomsFor(t *testing.T) {
 
 		mockRoomRepo.AssertExpectations(t)
 	})
+
+	t.Run("error: student does not exist", func(t *testing.T) {
+		var student domain.Student
+		student.ID=""
+		students:= []domain.Student{student}
+		room := domain.ChatRoom{RoomID: "",Admin: student, Students: students}
+		rooms:= []domain.ChatRoom{room}
+		studentChatRooms := &domain.StudentChatRooms{Student: mockStudent, Rooms: rooms}
+		resetRoomUsecaseTestFields()
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+
+		mockRoomRepo.On("GetRoomsFor", mock.Anything, mock.Anything).
+			Return(studentChatRooms, nil).Once()
+
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(&room, nil).Once()
+
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&student, nil).Once()
+
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, errors.New("")).Once()
+
+		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
+		chatroom, err := u.GetChatRoomsFor(context.TODO(), mockStudent.ID)
+		assert.Error(t, err)
+		assert.Nil(t, chatroom)
+
+		mockRoomRepo.AssertExpectations(t)
+	})
 }
 
 func TestDeleteRoom(t *testing.T) {
@@ -304,18 +358,31 @@ func TestDeleteRoom(t *testing.T) {
 func TestGetChatRoomsByClass(t *testing.T) {
 
 	t.Run(caseSuccess, func(t *testing.T) {
-		mockRooms := []domain.ChatRoom{}
+		var student domain.Student
+		student.ID=""
+		students:= []domain.Student{student}
+		room := domain.ChatRoom{RoomID: "",Admin: student, Students: students}
+		rooms:= []domain.ChatRoom{room}
 		resetRoomUsecaseTestFields()
 
 		mockRoomRepo.On("GetChatRoomsByClass", mock.Anything, mock.AnythingOfType("string")).
-			Return(mockRooms, nil)
+			Return(rooms, nil)
+
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(&room, nil).Once()
+
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&student, nil).Once()
+
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&student, nil).Once()
 		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
 		_, err := u.GetChatRoomsByClass(context.TODO(), "")
 		assert.NoError(t, err)
 		mockRoomRepo.AssertExpectations(t)
 	})
 
-	t.Run("Fail", func(t *testing.T) {
+	t.Run("error: unable to get rooms by class in repo", func(t *testing.T) {
 		resetRoomUsecaseTestFields()
 
 		mockRoomRepo.On("GetChatRoomsByClass", mock.Anything, mock.AnythingOfType("string")).
@@ -324,6 +391,74 @@ func TestGetChatRoomsByClass(t *testing.T) {
 		_, err := u.GetChatRoomsByClass(context.TODO(), "")
 		assert.Error(t, err)
 		mockRoomRepo.AssertExpectations(t)
+	})
 
+	t.Run("error: room does not exist", func(t *testing.T) {
+		var student domain.Student
+		student.ID=""
+		students:= []domain.Student{student}
+		room := domain.ChatRoom{RoomID: "",Admin: student, Students: students}
+		rooms:= []domain.ChatRoom{room}
+		resetRoomUsecaseTestFields()
+
+		mockRoomRepo.On("GetChatRoomsByClass", mock.Anything, mock.AnythingOfType("string")).
+			Return(rooms, nil)
+
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(nil, errors.New("")).Once()
+
+		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
+		_, err := u.GetChatRoomsByClass(context.TODO(), "")
+		assert.Error(t, err)
+		mockRoomRepo.AssertExpectations(t)
+	})
+
+	t.Run("error: student does not exist", func(t *testing.T) {
+		var student domain.Student
+		student.ID=""
+		students:= []domain.Student{student}
+		room := domain.ChatRoom{RoomID: "",Admin: student, Students: students}
+		rooms:= []domain.ChatRoom{room}
+		resetRoomUsecaseTestFields()
+
+		mockRoomRepo.On("GetChatRoomsByClass", mock.Anything, mock.AnythingOfType("string")).
+			Return(rooms, nil)
+
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(&room, nil).Once()
+
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, errors.New("")).Once()
+
+		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
+		_, err := u.GetChatRoomsByClass(context.TODO(), "")
+		assert.Error(t, err)
+		mockRoomRepo.AssertExpectations(t)
+	})
+
+	t.Run("error: student does not exist in fetched room", func(t *testing.T) {
+		var student domain.Student
+		student.ID=""
+		students:= []domain.Student{student}
+		room := domain.ChatRoom{RoomID: "",Admin: student, Students: students}
+		rooms:= []domain.ChatRoom{room}
+		resetRoomUsecaseTestFields()
+
+		mockRoomRepo.On("GetChatRoomsByClass", mock.Anything, mock.AnythingOfType("string")).
+			Return(rooms, nil)
+
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(&room, nil).Once()
+
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&student, nil).Once()
+
+		mockStudentRepo.On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, errors.New("")).Once()
+
+		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
+		_, err := u.GetChatRoomsByClass(context.TODO(), "")
+		assert.Error(t, err)
+		mockRoomRepo.AssertExpectations(t)
 	})
 }

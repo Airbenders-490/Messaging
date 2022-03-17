@@ -14,20 +14,6 @@ type RoomRepository struct {
 	mock.Mock
 }
 
-// AddParticipantToRoom provides a mock function with given fields: ctx, userID, roomID
-func (_m *RoomRepository) AddParticipantToRoom(ctx context.Context, userID string, roomID string) error {
-	ret := _m.Called(ctx, userID, roomID)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, userID, roomID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // AddParticipantToRoomAndAddRoomForParticipant provides a mock function with given fields: ctx, roomID, userID
 func (_m *RoomRepository) AddParticipantToRoomAndAddRoomForParticipant(ctx context.Context, roomID string, userID string) error {
 	ret := _m.Called(ctx, roomID, userID)
@@ -244,6 +230,20 @@ func (_m *RoomRepository) SaveRoomAndAddRoomForAllParticipants(ctx context.Conte
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *domain.ChatRoom) error); ok {
 		r0 = rf(ctx, room)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateParticipantPendingState provides a mock function with given fields: ctx, roomID, userID, isPending
+func (_m *RoomRepository) UpdateParticipantPendingState(ctx context.Context, roomID string, userID string, isPending bool) error {
+	ret := _m.Called(ctx, roomID, userID, isPending)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, bool) error); ok {
+		r0 = rf(ctx, roomID, userID, isPending)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -35,19 +35,6 @@ func resetFields() {
 	}
 }
 
-func TestAddParticipantToRoomSuccess(t *testing.T) {
-	sessionMock.On("Query", mock.Anything, mock.Anything, mock.Anything).Return(queryMock)
-	queryMock.On("WithContext", ctx).Return(queryMock)
-	queryMock.On("Consistency", mock.Anything).Return(queryMock)
-	queryMock.On("Exec").Return(nil)
-
-	if err := rr.AddParticipantToRoom(ctx, mock.Anything, mock.Anything); err != nil {
-		t.Errorf(errorMessage)
-	}
-	sessionMock.AssertExpectations(t)
-	resetFields()
-}
-
 func TestDeleteRoomSuccess(t *testing.T) {
 	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
 	queryMock.On("WithContext", ctx).Return(queryMock)
@@ -329,6 +316,19 @@ func TestGetChatRoomsByClassFailCloseScan(t *testing.T) {
 
 	if _, err := rr.GetChatRoomsByClass(ctx, mock.Anything); err == nil {
 		t.Errorf(errorMessage2)
+	}
+	sessionMock.AssertExpectations(t)
+	resetFields()
+}
+
+func TestUpdateParticipantPendingState(t *testing.T) {
+	sessionMock.On("Query", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("bool"), mock.AnythingOfType("string")).Return(queryMock)
+	queryMock.On("WithContext", ctx).Return(queryMock)
+	queryMock.On("Consistency", mock.Anything).Return(queryMock)
+	queryMock.On("Exec").Return(nil)
+
+	if err := rr.UpdateParticipantPendingState(ctx, "", "", false); err != nil {
+		t.Errorf(errorMessage)
 	}
 	sessionMock.AssertExpectations(t)
 	resetFields()

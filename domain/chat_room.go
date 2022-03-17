@@ -25,12 +25,12 @@ type StudentChatRooms struct {
 type RoomRepository interface {
 
 	// chat.room methods
-	AddParticipantToRoom(ctx context.Context, userID string, roomID string) error
 	DeleteRoom(ctx context.Context, roomID string) error
 	GetRoom(ctx context.Context, roomID string) (*ChatRoom, error)
 	GetChatRoomsByClass(ctx context.Context, className string) ([]ChatRoom, error)
 	RemoveParticipantFromRoom(ctx context.Context, userID string, roomID string) error
 	SaveRoom(ctx context.Context, room *ChatRoom) error
+	UpdateParticipantPendingState(ctx context.Context, roomID string, userID string, isPending bool) error
 
 	// chat.student_rooms methods
 	AddRoomForParticipant(ctx context.Context, roomID string, userID string) error
