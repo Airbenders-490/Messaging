@@ -25,7 +25,12 @@ func reset() {
 	cr = NewChatRepository(session)
 }
 
-func TestSaveMessageSuccess(t *testing.T) {
+const errorMessage = "Actual error, expected no error"
+const internalErrorMessage = "Internal Error"
+const errorMessage2 = "Actual no error, expected error"
+
+func TestSaveMessageSuccess(t *testing.T){
+
 	reset()
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)

@@ -10,6 +10,10 @@ import (
 	"testing"
 )
 
+
+var sessionMock = &mocks.SessionInterface{}
+var queryMock = &mocks.QueryInterface{}
+var ctx = context.Background()
 var sr = NewStudentRepository(sessionMock)
 var mockStudent domain.Student
 
