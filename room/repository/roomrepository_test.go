@@ -13,6 +13,7 @@ var batchMock = &mocks.BatchInterface{}
 var sessionMock = &mocks.SessionInterface{}
 var queryMock = &mocks.QueryInterface{}
 var mockIter = &mocks.IterInterface{}
+var scannerMock = &mocks.ScannerInterface{}
 var ctx = context.Background()
 var rr = NewRoomRepository(sessionMock)
 var room = &domain.ChatRoom{

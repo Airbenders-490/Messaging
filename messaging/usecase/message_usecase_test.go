@@ -265,6 +265,8 @@ func TestJoinRequest(t *testing.T) {
 	mockRoomRepository := new(mocks.RoomRepository)
 	var mockStudent domain.Student
 	faker.FakeData(&mockStudent)
+	var mockRoom domain.ChatRoom
+	faker.FakeData(&mockRoom)
 	u := NewMessageUseCase(time.Second*2, mockMessageRepository, mockRoomRepository, mockStudentRepository, nil)
 
 	t.Run("success", func(t *testing.T) {
