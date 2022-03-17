@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"chat/domain"
-	"chat/messaging/repository"
+	"chat/student/repository"
 	"context"
 	"encoding/json"
 	"github.com/streadway/amqp"
