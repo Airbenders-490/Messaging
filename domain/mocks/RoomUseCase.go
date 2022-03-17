@@ -42,6 +42,29 @@ func (_m *RoomUseCase) DeleteRoom(ctx context.Context, userID string, roomID str
 	return r0
 }
 
+// GetChatRoomsByClass provides a mock function with given fields: ctx, className
+func (_m *RoomUseCase) GetChatRoomsByClass(ctx context.Context, className string) ([]domain.ChatRoom, error) {
+	ret := _m.Called(ctx, className)
+
+	var r0 []domain.ChatRoom
+	if rf, ok := ret.Get(0).(func(context.Context, string) []domain.ChatRoom); ok {
+		r0 = rf(ctx, className)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.ChatRoom)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, className)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetChatRoomsFor provides a mock function with given fields: ctx, userID
 func (_m *RoomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*domain.StudentChatRooms, error) {
 	ret := _m.Called(ctx, userID)

@@ -25,12 +25,12 @@ func reset() {
 	cr = NewChatRepository(session)
 }
 
-
 const errorMessage = "Actual error, expected no error"
 const internalErrorMessage = "Internal Error"
 const errorMessage2 = "Actual no error, expected error"
 
 func TestSaveMessageSuccess(t *testing.T){
+
 	reset()
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
@@ -51,7 +51,7 @@ func TestSaveMessageSuccess(t *testing.T){
 	//reset()
 }
 
-func TestSaveMessageError (t *testing.T) {
+func TestSaveMessageError(t *testing.T) {
 	reset()
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
@@ -71,13 +71,12 @@ func TestSaveMessageError (t *testing.T) {
 	session.AssertExpectations(t)
 }
 
-
 func TestEditMessageSuccess(t *testing.T) {
 	reset()
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
@@ -97,7 +96,7 @@ func TestEditMessageFail(t *testing.T) {
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
@@ -117,7 +116,7 @@ func TestEditMessageUnableToUpdate(t *testing.T) {
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
@@ -137,7 +136,7 @@ func TestGetMessageSuccess(t *testing.T) {
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
@@ -156,7 +155,7 @@ func TestGetMessageError(t *testing.T) {
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
@@ -175,7 +174,7 @@ func TestGetMessagesSuccess(t *testing.T) {
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
@@ -202,7 +201,7 @@ func TestGetMessagesScanError(t *testing.T) {
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
@@ -214,7 +213,6 @@ func TestGetMessagesScanError(t *testing.T) {
 	scannerMock.On("Next").Return(true).Once()
 	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(errors.New(internalErrorMessage))
-
 
 	_, err := cr.GetMessages(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp, 2)
 
@@ -228,7 +226,7 @@ func TestGetMessagesError(t *testing.T) {
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
@@ -247,12 +245,12 @@ func TestGetMessagesError(t *testing.T) {
 	session.AssertExpectations(t)
 }
 
-func TestDeleteMessageSuccess (t *testing.T) {
+func TestDeleteMessageSuccess(t *testing.T) {
 	reset()
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)
@@ -265,12 +263,12 @@ func TestDeleteMessageSuccess (t *testing.T) {
 	session.AssertExpectations(t)
 }
 
-func TestDeleteMessageError (t *testing.T) {
+func TestDeleteMessageError(t *testing.T) {
 	reset()
 	var mockMessage domain.Message
 	faker.FakeData(&mockMessage)
 
-	session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything).
+	session.On("Query", mock.AnythingOfType("string"), mock.Anything, mock.Anything).
 		Return(query)
 	query.On("WithContext", mock.Anything).
 		Return(query)

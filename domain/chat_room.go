@@ -12,6 +12,7 @@ type ChatRoom struct {
 	Admin    Student   `json:"admin"`
 	Deleted  time.Time `json:"deleted"`
 	Students []Student `json:"students"`
+	Class    string    `json:"class"`
 }
 
 // StudentChatRooms struct
@@ -24,11 +25,12 @@ type StudentChatRooms struct {
 type RoomRepository interface {
 
 	// chat.room methods
-	AddParticipantToRoom(ctx context.Context, userID string, roomID string) error
 	DeleteRoom(ctx context.Context, roomID string) error
 	GetRoom(ctx context.Context, roomID string) (*ChatRoom, error)
+	GetChatRoomsByClass(ctx context.Context, className string) ([]ChatRoom, error)
 	RemoveParticipantFromRoom(ctx context.Context, userID string, roomID string) error
 	SaveRoom(ctx context.Context, room *ChatRoom) error
+	UpdateParticipantPendingState(ctx context.Context, roomID string, userID string, isPending bool) error
 
 	// chat.student_rooms methods
 	AddRoomForParticipant(ctx context.Context, roomID string, userID string) error
@@ -52,6 +54,7 @@ type RoomUseCase interface {
 	SaveRoom(ctx context.Context, room *ChatRoom) error
 	AddUserToRoom(ctx context.Context, roomID string, userID string) error
 	RemoveUserFromRoom(ctx context.Context, roomID string, userID string, loggedID string) error
+	GetChatRoomsByClass(ctx context.Context, className string) ([]ChatRoom, error)
 	GetChatRoomsFor(ctx context.Context, userID string) (*StudentChatRooms, error)
 	// DeleteRoom Ensure the user deleting is the admin
 	DeleteRoom(ctx context.Context, userID string, roomID string) error

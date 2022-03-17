@@ -18,18 +18,18 @@ func NewStudentRepository(session cassandra.SessionInterface) *StudentRepository
 }
 
 const (
-	saveStudent = `INSERT INTO chat.student (student_id, first_name, last_name) VALUES (?,?,?);`
-	editStudent = `UPDATE chat.student SET first_name=?, last_name=? WHERE student_id=?`
+	saveStudent   = `INSERT INTO chat.student (student_id, email, first_name, last_name) VALUES (?,?,?,?);`
+	editStudent   = `UPDATE chat.student SET email=?, first_name=?, last_name=? WHERE student_id=?`
 	deleteStudent = `DELETE FROM chat.student WHERE student_id=?`
-	getStudent  = `SELECT * FROM chat.student WHERE student_id=?;`
+	getStudent    = `SELECT * FROM chat.student WHERE student_id=?;`
 )
 
 func (r StudentRepository) SaveStudent(ctx context.Context, student *domain.Student) error {
-	return r.dbSession.Query(saveStudent, student.ID, student.FirstName, student.LastName).WithContext(ctx).Consistency(gocql.One).Exec()
+	return r.dbSession.Query(saveStudent, student.ID, student.Email, student.FirstName, student.LastName).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
 func (r StudentRepository) EditStudent(ctx context.Context, student *domain.Student) error {
-	return r.dbSession.Query(editStudent, student.FirstName, student.LastName, student.ID).WithContext(ctx).
+	return r.dbSession.Query(editStudent, student.Email, student.FirstName, student.LastName, student.ID).WithContext(ctx).
 		Consistency(gocql.One).Exec()
 }
 
@@ -40,7 +40,7 @@ func (r StudentRepository) DeleteStudent(ctx context.Context, id string) error {
 
 func (r StudentRepository) GetStudent(ctx context.Context, userID string) (*domain.Student, error) {
 	var student domain.Student
-	err := r.dbSession.Query(getStudent, userID).WithContext(ctx).Consistency(gocql.One).Scan(&student.ID, &student.FirstName, &student.LastName)
+	err := r.dbSession.Query(getStudent, userID).WithContext(ctx).Consistency(gocql.One).Scan(&student.ID, &student.Email, &student.FirstName, &student.LastName)
 	if err != nil {
 		return nil, err
 	}

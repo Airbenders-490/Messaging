@@ -10,6 +10,7 @@ import (
 	roomUseCase "chat/room/usecase"
 	studentRepository "chat/student/repository"
 	studentUseCase "chat/student/usecase"
+	"chat/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
 	"log"
@@ -34,12 +35,12 @@ func Start() {
 	}
 	log.Printf("Connected Cassandra database OK")
 
-
+	mail := utils.NewSimpleMail()
 	mr := repository.NewChatRepository(cassandra.NewSession(session))
 	rr := roomRepository.NewRoomRepository(cassandra.NewSession(session))
 	sr := studentRepository.NewStudentRepository(cassandra.NewSession(session))
 
-	mu := usecase.NewMessageUseCase(time.Second*2, mr, rr)
+	mu := usecase.NewMessageUseCase(time.Second*2, mr, rr, sr, mail)
 	ru := roomUseCase.NewRoomUseCase(rr, sr, time.Second*2)
 
 	mh := http.NewMessageHandler(mu)

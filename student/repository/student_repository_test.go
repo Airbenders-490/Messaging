@@ -28,12 +28,40 @@ func resetStudentRepoFields() {
 func TestSaveStudentSuccess(t *testing.T) {
 	resetStudentRepoFields()
 
-	sessionMock.On("Query", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(queryMock)
+	sessionMock.On("Query", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(queryMock)
 	queryMock.On("WithContext", ctx).Return(queryMock)
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
 	if err := sr.SaveStudent(ctx, &mockStudent); err != nil {
+		t.Errorf("Actual error, expected no error")
+	}
+	sessionMock.AssertExpectations(t)
+}
+
+func TestEditStudentSuccess(t *testing.T) {
+	resetStudentRepoFields()
+
+	sessionMock.On("Query", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(queryMock)
+	queryMock.On("WithContext", ctx).Return(queryMock)
+	queryMock.On("Consistency", mock.Anything).Return(queryMock)
+	queryMock.On("Exec").Return(nil)
+
+	if err := sr.EditStudent(ctx, &mockStudent); err != nil {
+		t.Errorf("Actual error, expected no error")
+	}
+	sessionMock.AssertExpectations(t)
+}
+
+func TestDeleteStudentSuccess(t *testing.T) {
+	resetStudentRepoFields()
+
+	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
+	queryMock.On("WithContext", ctx).Return(queryMock)
+	queryMock.On("Consistency", mock.Anything).Return(queryMock)
+	queryMock.On("Exec").Return(nil)
+
+	if err := sr.DeleteStudent(ctx, ""); err != nil {
 		t.Errorf("Actual error, expected no error")
 	}
 	sessionMock.AssertExpectations(t)
@@ -45,7 +73,7 @@ func TestGetStudentSuccess(t *testing.T) {
 	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
 	queryMock.On("WithContext", ctx).Return(queryMock)
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
-	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	if _, err := sr.GetStudent(ctx, mock.Anything); err != nil {
 		t.Errorf("Actual error, expected no error")
@@ -59,7 +87,7 @@ func TestGetStudentFail(t *testing.T) {
 	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
 	queryMock.On("WithContext", ctx).Return(queryMock)
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
-	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything).Return(errors.New(""))
+	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(""))
 
 	if _, err := sr.GetStudent(ctx, mock.Anything); err == nil {
 		t.Errorf("Actual no error, expected  error")

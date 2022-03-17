@@ -16,7 +16,7 @@ const (
 	failExchange = "Failed to declare an exchange"
 	failQueue = "Failed to declare a queue"
 	failedToRegisterConsumer = "Failed to register a consumer"
- 	failedBindQueue = "Failed to bind a queue"
+	failedBindQueue = "Failed to bind a queue"
 )
 
 type studentUseCase struct {
@@ -59,7 +59,7 @@ func (s studentUseCase) ListenStudentCreation() {
 // ListenStudentEdit listens to the
 func (s studentUseCase) ListenStudentEdit() {
 	err, msgs, forever := s.QueueListener("updated")
-	
+
 	go func() {
 		for d := range msgs {
 			var st domain.Student

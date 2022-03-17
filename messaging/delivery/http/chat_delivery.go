@@ -82,7 +82,7 @@ type hub struct {
 var (
 	singleton hub
 	once      sync.Once
-	mainHub = NewHub()
+	mainHub   = NewHub()
 )
 
 func NewHub() hub {
@@ -262,11 +262,6 @@ func (h *MessageHandler) LoadMessages(c *gin.Context) {
 		limit = int(i)
 	}
 
-	if room == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(missingIdError))
-		return
-	}
-
 	var message domain.Message
 	err = c.ShouldBindJSON(&message)
 	if err != nil {
@@ -287,13 +282,6 @@ func (h *MessageHandler) LoadMessages(c *gin.Context) {
 }
 
 func (h *MessageHandler) EditMessage(c *gin.Context) {
-	room := c.Param("roomID")
-
-	if room == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(missingIdError))
-		return
-	}
-
 	key, _ := c.Get("loggedID")
 	loggedID, _ := key.(string)
 
@@ -325,11 +313,6 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	room := c.Param("roomID")
 
-	if room == "" {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(missingIdError))
-		return
-	}
-
 	key, _ := c.Get("loggedID")
 	loggedID, _ := key.(string)
 
@@ -356,4 +339,40 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 
 	mainHub.broadcast <- NewDeleteEvent(message)
 	c.JSON(http.StatusAccepted, httputils.NewResponse("message deleted"))
+}
+
+func (h *MessageHandler) JoinRequest(c *gin.Context) {
+	room := c.Param("roomID")
+
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
+
+	ctx := c.Request.Context()
+
+	err := h.u.JoinRequest(ctx, room, loggedID, time.Now().UTC())
+	if err != nil {
+		errors.SetRESTError(err, c)
+		return
+	}
+
+	c.JSON(http.StatusOK, httputils.NewResponse("Join Request Sent"))
+}
+
+func (h *MessageHandler) RejectJoinRequest(c *gin.Context) {
+	roomID := c.Param("roomID")
+	userID := c.Param("userID")
+
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
+
+	ctx := c.Request.Context()
+
+	err := h.u.SendRejection(ctx, roomID, userID, loggedID)
+
+	if err != nil {
+		errors.SetRESTError(err, c)
+		return
+	}
+
+	c.JSON(http.StatusOK, httputils.NewResponse("Decline Join Request Sent"))
 }

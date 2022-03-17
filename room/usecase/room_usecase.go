@@ -37,6 +37,14 @@ func (u *roomUseCase) SaveRoom(ctx context.Context, room *domain.ChatRoom) error
 		return errors.NewConflictError(fmt.Sprintf("Room with ID %s already exists", room.RoomID))
 	}
 
+	student, err := u.sr.GetStudent(ctx, room.Admin.ID)
+	if err != nil {
+		return errors.NewConflictError(fmt.Sprintf("User %s does not exist", room.Admin.ID))
+	}
+	room.Admin.LastName = student.LastName
+	room.Admin.FirstName = student.FirstName
+
+	room.Students = append(room.Students, room.Admin)
 	for _, participant := range room.Students {
 		_, err = u.sr.GetStudent(ctx, participant.ID)
 		if err != nil {
@@ -78,21 +86,22 @@ func (u *roomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*doma
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
-	_, err := u.sr.GetStudent(ctx, userID)
+	student , err := u.sr.GetStudent(ctx, userID)
 	if err != nil {
 		return nil, errors.NewConflictError(fmt.Sprintf("The Student with ID %s does not exist", userID))
 	}
-	var studentChatRooms *domain.StudentChatRooms
 
-	studentChatRooms, err = u.rr.GetRoomsFor(ctx, userID)
+	studentChatRooms, err := u.rr.GetRoomsFor(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
+	studentChatRooms.Student.FirstName = student.FirstName
+	studentChatRooms.Student.LastName = student.LastName
 
-	for _, Room := range studentChatRooms.Rooms {
+	for i := range studentChatRooms.Rooms {
 		var room *domain.ChatRoom
 		var student *domain.Student
-		room, err = u.rr.GetRoom(ctx, Room.RoomID)
+		room, err = u.rr.GetRoom(ctx, studentChatRooms.Rooms[i].RoomID)
 		if err != nil {
 			return nil, err
 		}
@@ -100,18 +109,69 @@ func (u *roomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*doma
 		if err != nil {
 			return nil, err
 		}
-
 		room.Admin.LastName = student.LastName
 		room.Admin.FirstName = student.FirstName
 
-		Room.RoomID = room.RoomID
-		Room.Name = room.Name
-		// should we fill all students  ?? data
-		Room.Students = room.Students
-		Room.Deleted = room.Deleted
+		studentChatRooms.Rooms[i].RoomID = room.RoomID
+		studentChatRooms.Rooms[i].Admin = room.Admin
+		studentChatRooms.Rooms[i].Class = room.Class
+		studentChatRooms.Rooms[i].Name = room.Name
+		studentChatRooms.Rooms[i].Students = room.Students
+		studentChatRooms.Rooms[i].Deleted = room.Deleted
+
+		for j := range studentChatRooms.Rooms[i].Students {
+			student, err = u.sr.GetStudent(ctx, studentChatRooms.Rooms[i].Students[j].ID)
+			if err != nil {
+				return nil, err
+			}
+			studentChatRooms.Rooms[i].Students[j].FirstName = student.FirstName
+			studentChatRooms.Rooms[i].Students[j].LastName = student.LastName
+		}
+	}
+	return studentChatRooms, nil
+}
+
+// GetChatRoomsByClass should get rooms in chat.room by className, returns empty list if no rooms found
+func (u *roomUseCase) GetChatRoomsByClass(ctx context.Context, className string) ([]domain.ChatRoom, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
+
+	rooms, err := u.rr.GetChatRoomsByClass(ctx, className)
+	if err != nil {
+		return nil, err
 	}
 
-	return studentChatRooms, nil
+	for i := range rooms {
+		var r *domain.ChatRoom
+		var student *domain.Student
+		r, err = u.rr.GetRoom(ctx, rooms[i].RoomID)
+		if err != nil {
+			return nil, err
+		}
+		student, err = u.sr.GetStudent(ctx, r.Admin.ID)
+		if err != nil {
+			return nil, err
+		}
+		r.Admin.LastName = student.LastName
+		r.Admin.FirstName = student.FirstName
+
+		rooms[i].RoomID = r.RoomID
+		rooms[i].Name = r.Name
+		rooms[i].Admin = r.Admin
+		rooms[i].Class = r.Class
+		rooms[i].Students = r.Students
+		rooms[i].Deleted = r.Deleted
+
+		for j := range rooms[i].Students {
+			student, err = u.sr.GetStudent(ctx, rooms[i].Students[j].ID)
+			if err != nil {
+				return nil, err
+			}
+			rooms[i].Students[j].FirstName = student.FirstName
+			rooms[i].Students[j].LastName = student.LastName
+		}
+	}
+	return rooms, nil
 }
 
 // DeleteRoom should delete room for all users in chat.student_rooms and delete room from chat.room

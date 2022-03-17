@@ -19,11 +19,12 @@ func NewRoomRepository(session cassandra.SessionInterface) *RoomRepository {
 
 const (
 	// chat.room queries
-	addParticipantToRoom      = `UPDATE chat.room SET students = students +? WHERE roomid=?;`
-	deleteRoom                = `DELETE FROM chat.room WHERE roomid=?;`
-	getRoom                   = `SELECT * FROM chat.room WHERE roomid=?;`
-	removeParticipantFromRoom = `UPDATE chat.room SET students = students -? WHERE roomid=?;`
-	saveRoom                  = `INSERT INTO chat.room (roomid, name, admin, students) VALUES (?,?,?,?);`
+	deleteRoom                    = `DELETE FROM chat.room WHERE roomid=?;`
+	getRoom                       = `SELECT * FROM chat.room WHERE roomid=?;`
+	getChatRoomsByClass           = `SELECT * FROM chat.room WHERE class=? ALLOW FILTERING;`
+	removeParticipantFromRoom     = `DELETE students[?] FROM chat.room WHERE roomid = ?;`
+	saveRoom                      = `INSERT INTO chat.room (roomid, name, admin, students, class) VALUES (?,?,?,?,?);`
+	updateParticipantPendingState = `UPDATE chat.room SET students[?] = ?  WHERE roomid = ?;`
 
 	// chat.student_rooms queries
 	addRoomForParticipant    = `UPDATE chat.student_rooms SET rooms = rooms +? WHERE student=?;`
@@ -31,8 +32,8 @@ const (
 	removeRoomForParticipant = `UPDATE chat.student_rooms SET rooms = rooms-? WHERE student=?;`
 )
 
-func (r RoomRepository) AddParticipantToRoom(ctx context.Context, userID string, roomID string) error {
-	return r.dbSession.Query(addParticipantToRoom, [1]string{userID}, roomID).WithContext(ctx).Consistency(gocql.One).Exec()
+func (r RoomRepository) UpdateParticipantPendingState(ctx context.Context, roomID string, userID string, isPending bool) error {
+	return r.dbSession.Query(updateParticipantPendingState, userID, isPending, roomID).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
 func (r RoomRepository) DeleteRoom(ctx context.Context, roomID string) error {
@@ -41,17 +42,17 @@ func (r RoomRepository) DeleteRoom(ctx context.Context, roomID string) error {
 
 func (r RoomRepository) GetRoom(ctx context.Context, roomID string) (*domain.ChatRoom, error) {
 	var room domain.ChatRoom
-	var studentText []string
+	studentMap := make(map[string]bool)
 	var allStudents []domain.Student
 
-	err := r.dbSession.Query(getRoom, roomID).WithContext(ctx).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin.ID, &room.Deleted, &room.Name, &studentText)
+	err := r.dbSession.Query(getRoom, roomID).WithContext(ctx).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin.ID, &room.Class, &room.Deleted, &room.Name, &studentMap)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, ID := range studentText {
+	for userID, _ := range studentMap {
 		var student domain.Student
-		student.ID = ID
+		student.ID = userID
 		allStudents = append(allStudents, student)
 	}
 	room.Students = allStudents
@@ -60,7 +61,7 @@ func (r RoomRepository) GetRoom(ctx context.Context, roomID string) (*domain.Cha
 }
 
 func (r RoomRepository) RemoveParticipantFromRoom(ctx context.Context, userID string, roomID string) error {
-	return r.dbSession.Query(removeParticipantFromRoom, [1]string{userID}, roomID).WithContext(ctx).Consistency(gocql.One).Exec()
+	return r.dbSession.Query(removeParticipantFromRoom, userID, roomID).WithContext(ctx).Consistency(gocql.One).Exec()
 }
 
 func (r RoomRepository) SaveRoom(ctx context.Context, room *domain.ChatRoom) error {
@@ -107,6 +108,34 @@ func (r RoomRepository) GetRoomsFor(ctx context.Context, userID string) (*domain
 	return &StudentRoom, err
 }
 
+func (r RoomRepository) GetChatRoomsByClass(ctx context.Context, className string) ([]domain.ChatRoom, error) {
+	retrievedChatRooms := make([]domain.ChatRoom, 0)
+	var scanner cassandra.ScannerInterface
+	studentMap := make(map[string]bool)
+	scanner = r.dbSession.Query(getChatRoomsByClass, className).WithContext(ctx).Consistency(gocql.One).Iter().Scanner()
+
+	for scanner.Next() {
+		var room domain.ChatRoom
+		err := scanner.Scan(&room.RoomID, &room.Admin.ID, &room.Class, &room.Deleted, &room.Name, &studentMap)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for userID, _ := range studentMap {
+			var student domain.Student
+			student.ID = userID
+			room.Students = append(room.Students, student)
+		}
+		retrievedChatRooms = append(retrievedChatRooms, room)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return retrievedChatRooms, nil
+}
+
 func (r RoomRepository) RemoveRoomForParticipant(ctx context.Context, roomID string, userID string) error {
 	return r.dbSession.Query(removeRoomForParticipant, [1]string{roomID}, userID).WithContext(ctx).Consistency(gocql.One).Exec()
 }
@@ -126,14 +155,13 @@ func (r RoomRepository) RemoveRoomForParticipants(ctx context.Context, roomID st
 func (r RoomRepository) SaveRoomAndAddRoomForAllParticipants(ctx context.Context, room *domain.ChatRoom) error {
 	batch := r.dbSession.NewBatch(cassandra.BatchUnlogged).WithContext(ctx)
 
-	var userIDArr []string
-	for _, user := range room.Students {
-		userIDArr = append(userIDArr, user.ID)
+	studentMap := make(map[string]bool)
+	for _, student := range room.Students {
+		studentMap[student.ID] = false
 	}
-	// SaveRoom for chat.room
 	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: saveRoom,
-		Args: []interface{}{room.RoomID, room.Name, room.Admin.ID, userIDArr},
+		Args: []interface{}{room.RoomID, room.Name, room.Admin.ID, studentMap, room.Class},
 	})
 
 	// AddRoomForAllParticipants for chat.student_rooms
@@ -167,8 +195,8 @@ func (r RoomRepository) RemoveRoomForParticipantsAndDeleteRoom(ctx context.Conte
 func (r RoomRepository) AddParticipantToRoomAndAddRoomForParticipant(ctx context.Context, roomID string, userID string) error {
 	batch := r.dbSession.NewBatch(cassandra.BatchUnlogged).WithContext(ctx)
 	batch.AddBatchEntry(&gocql.BatchEntry{
-		Stmt: addParticipantToRoom,
-		Args: []interface{}{[1]string{userID}, roomID},
+		Stmt: updateParticipantPendingState,
+		Args: []interface{}{userID, false, roomID},
 	})
 	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: addRoomForParticipant,
@@ -181,7 +209,7 @@ func (r RoomRepository) RemoveParticipantFromRoomAndRemoveRoomForParticipant(ctx
 	batch := r.dbSession.NewBatch(cassandra.BatchUnlogged).WithContext(ctx)
 	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: removeParticipantFromRoom,
-		Args: []interface{}{[1]string{userID}, roomID},
+		Args: []interface{}{userID, roomID},
 	})
 	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: removeRoomForParticipant,

@@ -5,6 +5,7 @@ import (
 	"chat/utils/errors"
 	"chat/utils/httputils"
 	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -22,7 +23,7 @@ func NewRoomHandler(ru domain.RoomUseCase) *RoomHandler {
 func (h *RoomHandler) SaveRoom(c *gin.Context) {
 	key, _ := c.Get("loggedID")
 	loggedID, _ := key.(string)
-	student := domain.Student{ ID: loggedID }
+	student := domain.Student{ID: loggedID}
 
 	var room domain.ChatRoom
 	err := c.ShouldBindJSON(&room)
@@ -100,4 +101,16 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, httputils.NewResponse("Room Deleted"))
+}
+
+func (h *RoomHandler) GetChatRoomsByClass(c *gin.Context) {
+	className := strings.ToLower(c.Params.ByName("className"))
+
+	ctx := c.Request.Context()
+	rooms, err := h.u.GetChatRoomsByClass(ctx, className)
+	if err != nil {
+		errors.SetRESTError(err, c)
+		return
+	}
+	c.JSON(http.StatusOK, rooms)
 }
