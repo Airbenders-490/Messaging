@@ -194,7 +194,7 @@ func TestRemoveRoomForParticipantsSuccess(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(nil)
 
-	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "", "", ""}}); err != nil {
+	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "", "", "", false}}); err != nil {
 		t.Errorf(errorMessage)
 	}
 	sessionMock.AssertExpectations(t)
@@ -207,7 +207,7 @@ func TestRemoveRoomForParticipantsFail(t *testing.T) {
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
 	queryMock.On("Exec").Return(errors.New(internalErrorMessage))
 
-	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "", "", ""}}); err == nil {
+	if err := rr.RemoveRoomForParticipants(ctx, mock.Anything, []domain.Student{{"userID1", "", "", "", false}}); err == nil {
 		t.Errorf(errorMessage2)
 	}
 	sessionMock.AssertExpectations(t)

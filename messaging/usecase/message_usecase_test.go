@@ -320,7 +320,7 @@ func TestJoinRequest(t *testing.T) {
 
 	t.Run("error: user already in room", func(t *testing.T) {
 		students := []domain.Student{
-			{"","","",""},
+			{"","","","", false},
 		}
 		room := &domain.ChatRoom{Students: students}
 		mockStudentRepository.

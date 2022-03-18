@@ -50,9 +50,10 @@ func (r RoomRepository) GetRoom(ctx context.Context, roomID string) (*domain.Cha
 		return nil, err
 	}
 
-	for userID, _ := range studentMap {
+	for userID, isPending := range studentMap {
 		var student domain.Student
 		student.ID = userID
+		student.IsPending = isPending
 		allStudents = append(allStudents, student)
 	}
 	room.Students = allStudents
@@ -122,9 +123,10 @@ func (r RoomRepository) GetChatRoomsByClass(ctx context.Context, className strin
 			return nil, err
 		}
 
-		for userID, _ := range studentMap {
+		for userID, isPending := range studentMap {
 			var student domain.Student
 			student.ID = userID
+			student.IsPending = isPending
 			room.Students = append(room.Students, student)
 		}
 		retrievedChatRooms = append(retrievedChatRooms, room)

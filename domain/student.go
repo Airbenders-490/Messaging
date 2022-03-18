@@ -8,6 +8,7 @@ type Student struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
+	IsPending bool    `json:"isPending"`
 }
 
 // StudentRepository implements the contract for student repository. We only save and get a student here
