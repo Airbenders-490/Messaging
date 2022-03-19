@@ -52,7 +52,6 @@ func TestMessageSending(t *testing.T) {
 		Issuer:    "1",                               // reserved claim
 	})
 	signedToken, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
-
 	var tokenQuery = fmt.Sprintf("?token=%s", signedToken)
 	var validChatRoomID = "1"
 	var invalidChatRoomID =  "2"
@@ -68,7 +67,13 @@ func TestMessageSending(t *testing.T) {
 			assert.Fail(t, err.Error())
 		}
 
-		ws, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomPath, addr.String(), validChatRoomID, tokenQuery), nil)
+		token2 := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+			Issuer:    "2",
+		})
+		signedToken2, err := token2.SignedString([]byte(os.Getenv("SECRET_KEY")))
+		tokenQuery2 := fmt.Sprintf("?token=%s", signedToken2)
+
+		ws, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf(chatRoomPath, addr.String(), validChatRoomID, tokenQuery2), nil)
 		if err != nil {
 			assert.Fail(t, err.Error())
 		}
