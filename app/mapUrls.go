@@ -4,17 +4,14 @@ import (
 	"chat/messaging/delivery/http"
 	roomHttp "chat/room/delivery/http"
 	"github.com/gin-gonic/gin"
-	"math/rand"
-	"strconv"
 )
 
 func mapChatUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler) {
 
 	r.GET("/chat/:roomID", func(c *gin.Context) {
 		roomID := c.Param("roomID")
-		userID := strconv.Itoa(rand.Int())
 		ctx := c.Request.Context()
-		mh.ServeWs(c.Writer, c.Request, roomID, userID, ctx)
+		mh.ServeWs(c.Writer, c.Request, roomID, ctx)
 	})
 	router := r.Group("/api")
 	router.Use(mw.AuthMiddleware())
