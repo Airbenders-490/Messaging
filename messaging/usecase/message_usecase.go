@@ -7,6 +7,8 @@ import (
 	"chat/utils/errors"
 	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -187,7 +189,16 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 	}
 	exPath := filepath.Dir(ex)
 	fmt.Println(exPath)
-	t, err := template.ParseFiles("./static/rejection_template.html")
+
+	files, err := ioutil.ReadDir("./")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		fmt.Println(f.Name())
+	}
+	t, err := template.ParseFiles("./chat/static/rejection_template.html")
 	if err != nil {
 		t, err = template.ParseFiles("../static/rejection_template.html")
 		if err != nil {
