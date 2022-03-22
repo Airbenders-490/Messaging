@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"text/template"
 	"time"
 )
@@ -180,12 +181,25 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 }
 
 func createEmailBody(student *domain.Student, team string) ([]byte, error) {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	fmt.Println(exPath)
 	t, err := template.ParseFiles("./static/rejection_template.html")
 	if err != nil {
-		t, err = template.ParseFiles("../../static/rejection_template.html")
+		t, err = template.ParseFiles("../static/rejection_template.html")
 		if err != nil {
-			return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file %s", err))
+			t, err = template.ParseFiles("../../static/rejection_template.html")
+			if err != nil {
+				t, err = template.ParseFiles("../../../static/rejection_template.html")
+				if err != nil {
+					return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file from current filepath %s : %s",exPath, err))
+				}
+			}
 		}
+
 	}
 	var body bytes.Buffer
 
