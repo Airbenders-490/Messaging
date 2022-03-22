@@ -198,7 +198,7 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 	for _, f := range files {
 		fmt.Println(f.Name())
 	}
-	t, err := template.ParseFiles("./chat/static/rejection_template.html")
+	t, err := template.ParseFiles("./static/rejection_template.html")
 	if err != nil {
 		t, err = template.ParseFiles("../static/rejection_template.html")
 		if err != nil {
