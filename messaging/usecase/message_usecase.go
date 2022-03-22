@@ -190,23 +190,40 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 	exPath := filepath.Dir(ex)
 	fmt.Println(exPath)
 
+	fmt.Println("current dir:")
 	files, err := ioutil.ReadDir("./")
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	for _, f := range files {
 		fmt.Println(f.Name())
 	}
+	fmt.Println("1 step back:")
+	files, err = ioutil.ReadDir("./..")
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, f := range files {
+		fmt.Println(f.Name())
+	}
+	fmt.Println("2 step back:")
+	files, err = ioutil.ReadDir("./../..")
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, f := range files {
+		fmt.Println(f.Name())
+	}
+
 	t, err := template.ParseFiles("rejection_template.html")
 	if err != nil {
 		t, err = template.ParseFiles("./static/rejection_template.html")
 		if err != nil {
 			t, err = template.ParseFiles("../../static/rejection_template.html")
 			if err != nil {
-				t, err = template.ParseFiles("../../../static/rejection_template.html")
+				t, err = template.ParseFiles("../chat/static/rejection_template.html")
 				if err != nil {
-					return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file from current filepath!! %s : %s",exPath, err))
+					return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file from filepath!?! %s : %s",exPath, err))
 				}
 			}
 		}
