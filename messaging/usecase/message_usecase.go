@@ -215,6 +215,18 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 		fmt.Println(f.Name())
 	}
 
+	path, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Sprintln("my current dir: ", path)  // for example /home/user
+
+	path, err = os.Executable()
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Sprintln("executable path: ", path) // for example /tmp/go-build872132473/b001/exe/main
+
 	t, err := template.ParseFiles("./chat/static/rejection_template.html")
 	if err != nil {
 		t, err = template.ParseFiles("./static/rejection_template.html")
