@@ -198,15 +198,15 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 	for _, f := range files {
 		fmt.Println(f.Name())
 	}
-	t, err := template.ParseFiles("./static/rejection_template.html")
+	t, err := template.ParseFiles("rejection_template.html")
 	if err != nil {
-		t, err = template.ParseFiles("../static/rejection_template.html")
+		t, err = template.ParseFiles("./static/rejection_template.html")
 		if err != nil {
 			t, err = template.ParseFiles("../../static/rejection_template.html")
 			if err != nil {
 				t, err = template.ParseFiles("../../../static/rejection_template.html")
 				if err != nil {
-					return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file from current filepath %s : %s",exPath, err))
+					return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file from current filepath!! %s : %s",exPath, err))
 				}
 			}
 		}
