@@ -180,11 +180,13 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 }
 
 func createEmailBody(student *domain.Student, team string) ([]byte, error) {
-	t, err := template.ParseFiles(os.Getenv("REJECTION_TEMPLATE_PATH"))
+	t, err := template.ParseFiles("./static/rejection_template.html")
 	if err != nil {
-		return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file %s", err))
+		t, err = template.ParseFiles("../../static/rejection_template.html")
+		if err != nil {
+			return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file %s", err))
+		}
 	}
-
 	var body bytes.Buffer
 
 	message := fmt.Sprintf("From: %s\r\n", os.Getenv("EMAIL_FROM"))
