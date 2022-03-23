@@ -205,13 +205,13 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	//	fmt.Println("FAILED TO SEND MAIL WITH PLAINAUTH")
 	//	fmt.Println(err)
 
-		auth := smtp.CRAMMD5Auth(user, password)
-		err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{student.Email}, emailBody)
-		if err != nil {
-			fmt.Println("FAILED TO SEND MAIL USING CRAMMD5AUTH")
-			fmt.Println(err)
+		//auth := smtp.CRAMMD5Auth(user, password)
+		//err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{student.Email}, emailBody)
+		//if err != nil {
+		//	fmt.Println("FAILED TO SEND MAIL USING CRAMMD5AUTH")
+		//	fmt.Println(err)
 
-			err := smtp.SendMail(smtpHost+":"+smtpPort, nil, from, []string{student.Email}, emailBody)
+			err = smtp.SendMail(smtpHost+":"+smtpPort, nil, from, []string{student.Email}, emailBody)
 
 			if err != nil {
 				fmt.Println("FAILED TO SEND MAIL WITHOUT AUTH")
@@ -245,9 +245,9 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 			}
 
 
-		}else {
-			fmt.Println("SUCCESS SEND MAIL USING CRAMMD5AUTH")
-		}
+		//}else {
+		//	fmt.Println("SUCCESS SEND MAIL USING CRAMMD5AUTH")
+		//}
 	//} else {
 	//	fmt.Println("SUCCESS SENT MAIL USING PLAINAUTH")
 	//}
