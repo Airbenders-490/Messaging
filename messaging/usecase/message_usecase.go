@@ -6,8 +6,8 @@ import (
 	"chat/utils"
 	"chat/utils/errors"
 	"context"
+	"encoding/base64"
 	"fmt"
-	"net"
 	"net/smtp"
 	"os"
 	"path"
@@ -211,38 +211,67 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 		//	fmt.Println("FAILED TO SEND MAIL USING CRAMMD5AUTH")
 		//	fmt.Println(err)
 
-			err = smtp.SendMail(smtpHost+":"+smtpPort, nil, from, []string{student.Email}, emailBody)
+			//err = smtp.SendMail(smtpHost+":"+smtpPort, nil, from, []string{student.Email}, emailBody)
+			//
+			//if err != nil {
+			//	fmt.Println("FAILED TO SEND MAIL WITHOUT AUTH")
+			//	fmt.Println(err)
 
-			if err != nil {
-				fmt.Println("FAILED TO SEND MAIL WITHOUT AUTH")
-				fmt.Println(err)
-
-
-				_, err := net.Dial("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+				conn, err := smtp.Dial(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+				//conn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort))
 				if err != nil {
 					fmt.Println("COULD NOT DIAL IN TO SMTP ADDRESS")
 					fmt.Println(err)
+					return err
+					//conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort), 10*time.Second)
+					//if err != nil {
+					//	fmt.Println("COULD NOT DIALTIMEOUT IN TO SMTP ADDRESS")
+					//	fmt.Println(err)
+					//}
+					//fmt.Println("SUCCESS DIALTIMEOUT TO SMTP ADDRESS")
 
-					conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort), 10*time.Second)
-					if err != nil {
-						fmt.Println("COULD NOT DIALTIMEOUT IN TO SMTP ADDRESS")
-						fmt.Println(err)
-					}
-					fmt.Println("SUCCESS DIALTIMEOUT TO SMTP ADDRESS")
-					fmt.Println(err)
 					// Connect to the SMTP server
-					c, err := smtp.NewClient(conn, smtpHost)
-					if err != nil {
-						fmt.Println("FAILED TO CREATE NEW STMP CLIENT")
-						fmt.Println(err)
-					}
-					defer c.Quit()
+					//c, err := smtp.NewClient(conn, smtpHost)
+					//if err != nil {
+					//	fmt.Println("FAILED TO CREATE NEW STMP CLIENT")
+					//	fmt.Println(err)
+					//}
+					//defer c.Quit()
 				} else {
 					fmt.Println("SUCCESS DIALLED INTO SMTP ADDRESS")
 				}
-			} else {
-				fmt.Println("SUCCESS SEND MAIL WITHOUT AUTH")
-			}
+				defer conn.Close()
+
+				if err = conn.Mail(from); err != nil {
+					return err
+				}
+				if err = conn.Rcpt(student.Email); err != nil {
+					return err
+				}
+				w, err := conn.Data()
+				if err != nil {
+					return err
+				}
+				msg := "To: " + strings.Join([]string{student.Email}, ",") + "\r\n" +
+					"From: " + from + "\r\n" +
+					"Subject: " + "TESTTT" + "\r\n" +
+					"Content-Type: text/html; charset=\"UTF-8\"\r\n" +
+					"Content-Transfer-Encoding: base64\r\n" +
+					"\r\n" + base64.StdEncoding.EncodeToString([]byte(emailBody))
+
+				_, err = w.Write([]byte(msg))
+				if err != nil {
+					return err
+				}
+				err = w.Close()
+				if err != nil {
+					return err
+				}
+				return conn.Quit()
+
+		//} else {
+			//	fmt.Println("SUCCESS SEND MAIL WITHOUT AUTH")
+			//}
 
 
 		//}else {
@@ -252,11 +281,11 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	//	fmt.Println("SUCCESS SENT MAIL USING PLAINAUTH")
 	//}
 
-	err = u.mailer.SendSimpleMail(student.Email, emailBody)
-	if err!= nil {
-		fmt.Println("FAILED TO SEND MAIL")
-		fmt.Println(err)
-	}
+	//err = u.mailer.SendSimpleMail(student.Email, emailBody)
+	//if err!= nil {
+	//	fmt.Println("FAILED TO SEND MAIL")
+	//	fmt.Println(err)
+	//}
 	return err
 }
 
