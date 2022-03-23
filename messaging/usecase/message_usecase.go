@@ -200,7 +200,7 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	m.SetHeader("Subject", "Hello!")
 	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
 
-	d := gomail.NewDialer(smtpHost, 2525, user, password)
+	d := gomail.NewDialer(smtpHost, 465, user, password)
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	fmt.Println("NEW DIALER CREATED")
 	// Send the email to Bob, Cora and Dan.
