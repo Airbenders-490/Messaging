@@ -22,7 +22,7 @@ func NewSimpleMail() Mailer {
 		smtpHost: os.Getenv("SMTP_HOST"),
 		smtpPort: os.Getenv("SMTP_PORT"),
 	}
-	fmt.Sprintf("SIMPLE MAIL CONFIG: %s %s %s %s %s", mailer.from, mailer.user, mailer.password, mailer.password, mailer.smtpHost, mailer.smtpHost)
+	fmt.Sprintf("SIMPLE MAIL CONFIG: %s %s %s %s %s", mailer.from, mailer.user, mailer.password, mailer.password, mailer.smtpHost, mailer.smtpPort)
 	return mailer
 }
 
