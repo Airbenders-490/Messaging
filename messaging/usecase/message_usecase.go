@@ -6,9 +6,8 @@ import (
 	"chat/utils"
 	"chat/utils/errors"
 	"context"
-	"encoding/base64"
 	"fmt"
-	"net/smtp"
+	"github.com/domodwyer/mailyak/v3"
 	"os"
 	"path"
 	"strings"
@@ -176,7 +175,7 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to remove user from room: %s", err.Error()))
 	}
 
-	emailBody, err := createEmailBody(student, roomID)
+	_, err = createEmailBody(student, roomID)
 	if err != nil {
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to create email: %s", err.Error()))
 	}
@@ -194,35 +193,36 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	fmt.Println(smtpHost)
 	fmt.Println(smtpPort)
 
-	// PlainAuth will only send the credentials if the connection is using TLS or is
-	// connected to localhost.
-	// Otherwise authentication will fail with an error, without sending the credentials.
-	//auth := smtp.PlainAuth("", user, password, smtpHost)
-	//fmt.Println("COMPLETED AUTH SETUP ")
-	//
-	//err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{student.Email}, emailBody)
-	//if err != nil {
-	//	fmt.Println("FAILED TO SEND MAIL WITH PLAINAUTH")
-	//	fmt.Println(err)
+	// Create a new email - specify the SMTP host:port and auth (if needed)
+	mail := mailyak.New(fmt.Sprintf("%s:%s", smtpHost, smtpPort), nil)
 
-		//auth := smtp.CRAMMD5Auth(user, password)
-		//err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{student.Email}, emailBody)
-		//if err != nil {
-		//	fmt.Println("FAILED TO SEND MAIL USING CRAMMD5AUTH")
-		//	fmt.Println(err)
+	mail.To(student.Email)
+	mail.From(from)
+	mail.FromName("momas")
+	mail.Subject("REJECTION")
 
-			//err = smtp.SendMail(smtpHost+":"+smtpPort, nil, from, []string{student.Email}, emailBody)
-			//
-			//if err != nil {
-			//	fmt.Println("FAILED TO SEND MAIL WITHOUT AUTH")
-			//	fmt.Println(err)
+	// mail.HTML() and mail.Plain() implement io.Writer, so you can do handy things like
+	// parse a template directly into the email body
+	//if err := t.ExecuteTemplate(mail.HTML(), "htmlEmail", data); err != nil {
+	//	panic(" 💣 ")
+	//}
 
-				conn, err := smtp.Dial(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+	// Or set the body using a string setter
+	mail.Plain().Set("YOU ARE REJECTEDDD")
+
+	// And you're done!
+	if err := mail.Send(); err != nil {
+		panic(" UNABLE TO SEND WITH MAILYAK ")
+	}
+
+
+
+				//conn, err := smtp.Dial(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
 				//conn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort))
-				if err != nil {
-					fmt.Println("COULD NOT DIAL IN TO SMTP ADDRESS")
-					fmt.Println(err)
-					return err
+				//if err != nil {
+				//	fmt.Println("COULD NOT DIAL IN TO SMTP ADDRESS")
+				//	fmt.Println(err)
+				//	return err
 					//conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort), 10*time.Second)
 					//if err != nil {
 					//	fmt.Println("COULD NOT DIALTIMEOUT IN TO SMTP ADDRESS")
@@ -237,49 +237,37 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 					//	fmt.Println(err)
 					//}
 					//defer c.Quit()
-				} else {
-					fmt.Println("SUCCESS DIALLED INTO SMTP ADDRESS")
-				}
-				defer conn.Close()
-
-				if err = conn.Mail(from); err != nil {
-					return err
-				}
-				if err = conn.Rcpt(student.Email); err != nil {
-					return err
-				}
-				w, err := conn.Data()
-				if err != nil {
-					return err
-				}
-				msg := "To: " + strings.Join([]string{student.Email}, ",") + "\r\n" +
-					"From: " + from + "\r\n" +
-					"Subject: " + "TESTTT" + "\r\n" +
-					"Content-Type: text/html; charset=\"UTF-8\"\r\n" +
-					"Content-Transfer-Encoding: base64\r\n" +
-					"\r\n" + base64.StdEncoding.EncodeToString([]byte(emailBody))
-
-				_, err = w.Write([]byte(msg))
-				if err != nil {
-					return err
-				}
-				err = w.Close()
-				if err != nil {
-					return err
-				}
-				return conn.Quit()
-
-		//} else {
-			//	fmt.Println("SUCCESS SEND MAIL WITHOUT AUTH")
-			//}
-
-
-		//}else {
-		//	fmt.Println("SUCCESS SEND MAIL USING CRAMMD5AUTH")
-		//}
-	//} else {
-	//	fmt.Println("SUCCESS SENT MAIL USING PLAINAUTH")
-	//}
+				//} else {
+				//	fmt.Println("SUCCESS DIALLED INTO SMTP ADDRESS")
+				//}
+				//defer conn.Close()
+				//
+				//if err = conn.Mail(from); err != nil {
+				//	return err
+				//}
+				//if err = conn.Rcpt(student.Email); err != nil {
+				//	return err
+				//}
+				//w, err := conn.Data()
+				//if err != nil {
+				//	return err
+				//}
+				//msg := "To: " + strings.Join([]string{student.Email}, ",") + "\r\n" +
+				//	"From: " + from + "\r\n" +
+				//	"Subject: " + "TESTTT" + "\r\n" +
+				//	"Content-Type: text/html; charset=\"UTF-8\"\r\n" +
+				//	"Content-Transfer-Encoding: base64\r\n" +
+				//	"\r\n" + base64.StdEncoding.EncodeToString([]byte(emailBody))
+				//
+				//_, err = w.Write([]byte(msg))
+				//if err != nil {
+				//	return err
+				//}
+				//err = w.Close()
+				//if err != nil {
+				//	return err
+				//}
+				//return conn.Quit()
 
 	//err = u.mailer.SendSimpleMail(student.Email, emailBody)
 	//if err!= nil {

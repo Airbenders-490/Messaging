@@ -13,6 +13,8 @@ require (
 	github.com/stretchr/testify v1.7.0
 )
 
+require github.com/domodwyer/mailyak/v3 v3.3.3 // indirect
+
 require (
 	github.com/bxcodec/faker/v3 v3.7.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
