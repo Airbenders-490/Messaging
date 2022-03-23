@@ -6,8 +6,9 @@ import (
 	"chat/utils"
 	"chat/utils/errors"
 	"context"
+	"crypto/tls"
 	"fmt"
-	"net"
+	"gopkg.in/gomail.v2"
 	"os"
 	"path"
 	"strings"
@@ -193,6 +194,20 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	fmt.Println(smtpHost)
 	fmt.Println(smtpPort)
 
+	m := gomail.NewMessage()
+	m.SetHeader("From", from)
+	m.SetHeader("To", student.Email)
+	m.SetHeader("Subject", "Hello!")
+	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
+
+	d := gomail.NewDialer(smtpHost, 2525, user, password)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	fmt.Println("NEW DIALER CREATED")
+	// Send the email to Bob, Cora and Dan.
+	if err := d.DialAndSend(m); err != nil {
+		panic(err)
+	}
+
 	// Create a new email - specify the SMTP host:port and auth (if needed)
 	//mail := mailyak.New(fmt.Sprintf("%s:%s", smtpHost, smtpPort), nil)
 	//
@@ -218,14 +233,14 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 
 
 				//conn, err := smtp.Dial(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
-				fmt.Println("DIALLING IN TO SMTP ADDRESS")
-				_, err = net.Dial("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort))
-				if err != nil {
-					fmt.Println("COULD NOT DIAL IN TO SMTP ADDRESS")
-					fmt.Println(err)
-					return err
-				}
-				fmt.Println("SUCCESS DIAL IN TO SMTP ADDRESS")
+				//fmt.Println("DIALLING IN TO SMTP ADDRESS")
+				//_, err = net.Dial("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+				//if err != nil {
+				//	fmt.Println("COULD NOT DIAL IN TO SMTP ADDRESS")
+				//	fmt.Println(err)
+				//	return err
+				//}
+				//fmt.Println("SUCCESS DIAL IN TO SMTP ADDRESS")
 					//conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort), 10*time.Second)
 					//if err != nil {
 					//	fmt.Println("COULD NOT DIALTIMEOUT IN TO SMTP ADDRESS")
