@@ -187,7 +187,7 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	password:= "5a1e6e53f5f9d8"
 	smtpHost:= "smtp.mailtrap.io"
 	smtpPort:= "2525"
-	fmt.Sprintf("SIMPLE MAIL CONFIGG: %s %s %s %s %s", from, user, password, password, smtpHost, smtpPort)
+	fmt.Sprintf("SIMPLE MAIL CONFIGG: %s %s %s %s %s", from, user, password, smtpHost, smtpPort)
 
 	// PlainAuth will only send the credentials if the connection is using TLS or is
 	// connected to localhost.
