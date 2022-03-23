@@ -15,13 +15,15 @@ type Mailer interface {
 
 // NewSimpleMail is a constructor for Mailer interface. Returns a simpleMail struct
 func NewSimpleMail() Mailer {
-	return simpleMail{
+	mailer := simpleMail{
 		from:     os.Getenv("EMAIL_FROM"),
 		user:     os.Getenv("USER"),
 		password: os.Getenv("PASSWORD"),
 		smtpHost: os.Getenv("SMTP_HOST"),
 		smtpPort: os.Getenv("SMTP_PORT"),
 	}
+	fmt.Sprintf("SIMPLE MAIL CONFIG: %s %s %s %s %s", mailer.from, mailer.user, mailer.password, mailer.password, mailer.smtpHost, mailer.smtpHost)
+	return mailer
 }
 
 type simpleMail struct {

@@ -179,7 +179,12 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to create email: %s", err.Error()))
 	}
 	fmt.Println("COMPLETED EMAIL BODY")
-	return u.mailer.SendSimpleMail(student.Email, emailBody)
+
+	err = u.mailer.SendSimpleMail(student.Email, emailBody)
+	if err!= nil {
+		fmt.Sprintf("FAILED TO SEND MAIL \n %s", err)
+	}
+	return err
 }
 
 func createEmailBody(student *domain.Student, team string) ([]byte, error) {
