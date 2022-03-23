@@ -7,7 +7,7 @@ import (
 	"chat/utils/errors"
 	"context"
 	"fmt"
-	"github.com/domodwyer/mailyak/v3"
+	"net"
 	"os"
 	"path"
 	"strings"
@@ -194,35 +194,38 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	fmt.Println(smtpPort)
 
 	// Create a new email - specify the SMTP host:port and auth (if needed)
-	mail := mailyak.New(fmt.Sprintf("%s:%s", smtpHost, smtpPort), nil)
-
-	mail.To(student.Email)
-	mail.From(from)
-	mail.FromName("momas")
-	mail.Subject("REJECTION")
-
-	// mail.HTML() and mail.Plain() implement io.Writer, so you can do handy things like
-	// parse a template directly into the email body
-	//if err := t.ExecuteTemplate(mail.HTML(), "htmlEmail", data); err != nil {
-	//	panic(" 💣 ")
+	//mail := mailyak.New(fmt.Sprintf("%s:%s", smtpHost, smtpPort), nil)
+	//
+	//mail.To(student.Email)
+	//mail.From(from)
+	//mail.FromName("momas")
+	//mail.Subject("REJECTION")
+	//
+	//// mail.HTML() and mail.Plain() implement io.Writer, so you can do handy things like
+	//// parse a template directly into the email body
+	//if _, err := io.WriteString(mail.HTML(), "So long, and thanks for all the fish."); err != nil {
+	//	panic(" :( ")
 	//}
-
-	// Or set the body using a string setter
-	mail.Plain().Set("YOU ARE REJECTEDDD")
-
-	// And you're done!
-	if err := mail.Send(); err != nil {
-		panic(" UNABLE TO SEND WITH MAILYAK ")
-	}
+	//
+	//// Or set the body using a string setter
+	////mail.Plain().Set("YOU ARE REJECTEDDD")
+	//
+	//// And you're done!
+	//if err := mail.Send(); err != nil {
+	//	panic(" UNABLE TO SEND WITH MAILYAK ")
+	//}
 
 
 
 				//conn, err := smtp.Dial(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
-				//conn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort))
-				//if err != nil {
-				//	fmt.Println("COULD NOT DIAL IN TO SMTP ADDRESS")
-				//	fmt.Println(err)
-				//	return err
+				fmt.Println("DIALLING IN TO SMTP ADDRESS")
+				_, err = net.Dial("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+				if err != nil {
+					fmt.Println("COULD NOT DIAL IN TO SMTP ADDRESS")
+					fmt.Println(err)
+					return err
+				}
+				fmt.Println("SUCCESS DIAL IN TO SMTP ADDRESS")
 					//conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort), 10*time.Second)
 					//if err != nil {
 					//	fmt.Println("COULD NOT DIALTIMEOUT IN TO SMTP ADDRESS")
