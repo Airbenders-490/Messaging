@@ -180,61 +180,73 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	if err != nil {
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to create email: %s", err.Error()))
 	}
-	fmt.Println("COMPLETED EMAIL BODY!!")
+	fmt.Println("COMPLETED EMAIL BODY!!!!")
 
 	from:=     "soen490airbenders@gmail.com"
 	user:=     "035a001030be3b"
 	password:= "5a1e6e53f5f9d8"
 	smtpHost:= "smtp.mailtrap.io"
 	smtpPort:= "2525"
-	fmt.Sprintf("SIMPLE MAIL CONFIGG: %s %s %s %s %s", from, user, password, smtpHost, smtpPort)
+
+	fmt.Println(from)
+	fmt.Println(user)
+	fmt.Println(password)
+	fmt.Println(smtpHost)
+	fmt.Println(smtpPort)
 
 	// PlainAuth will only send the credentials if the connection is using TLS or is
 	// connected to localhost.
 	// Otherwise authentication will fail with an error, without sending the credentials.
 	auth := smtp.PlainAuth("", user, password, smtpHost)
-	fmt.Sprintf("COMPLETED AUTH SETUP %s\n", auth)
+	fmt.Println("COMPLETED AUTH SETUP ")
 
 	err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{student.Email}, emailBody)
 	if err != nil {
-		fmt.Sprintf("FAILED TO SEND MAIL WITH PLAINAUTH\n %s", err)
+		fmt.Println("FAILED TO SEND MAIL WITH PLAINAUTH")
+		fmt.Println(err)
 
 		auth := smtp.CRAMMD5Auth(user, password)
 		err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{student.Email}, emailBody)
 		if err != nil {
-			fmt.Sprintf("FAILED TO SEND MAIL USING CRAMMD5AUTH\n %s", err)
+			fmt.Println("FAILED TO SEND MAIL USING CRAMMD5AUTH")
+			fmt.Println(err)
 
 			err := smtp.SendMail(smtpHost+":"+smtpPort, nil, from, []string{student.Email}, emailBody)
 
 			if err != nil {
-				fmt.Sprintf("FAILED TO SEND MAIL WITHOUT AUTH\n %s", err)
+				fmt.Println("FAILED TO SEND MAIL WITHOUT AUTH")
+				fmt.Println(err)
 
 
 				_, err := net.Dial("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort))
 				if err != nil {
-					fmt.Sprintf("COULD NOT DIAL IN TO SMTP ADDRESS\n %s", err)
+					fmt.Println("COULD NOT DIAL IN TO SMTP ADDRESS")
+					fmt.Println(err)
 
 					conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort), 10*time.Second)
 					if err != nil {
-						fmt.Sprintf("COULD NOT DIALTIMEOUT IN TO SMTP ADDRESS\n %s", err)
+						fmt.Println("COULD NOT DIALTIMEOUT IN TO SMTP ADDRESS")
+						fmt.Println(err)
 					}
-					fmt.Sprintf("SUCCESS DIALTIMEOUT TO SMTP ADDRESS\n %s", err)
+					fmt.Println("SUCCESS DIALTIMEOUT TO SMTP ADDRESS")
+					fmt.Println(err)
 					// Connect to the SMTP server
 					c, err := smtp.NewClient(conn, smtpHost)
 					if err != nil {
-						fmt.Sprintf("FAILED TO CREATE NEW STMP CLIENT \n %s", err)
+						fmt.Println("FAILED TO CREATE NEW STMP CLIENT")
+						fmt.Println(err)
 					}
 					defer c.Quit()
 				} else {
-					fmt.Println("SUCCESSFULLY DIALLED INTO SMTP ADDRESS")
+					fmt.Println("SUCCESS DIALLED INTO SMTP ADDRESS")
 				}
 			} else {
-				fmt.Sprintf("SUCCESS SEND MAIL WITHOUT AUTH\n")
+				fmt.Println("SUCCESS SEND MAIL WITHOUT AUTH")
 			}
 
 
 		}else {
-			fmt.Sprintf("SUCCESS SEND MAIL USING CRAMMD5AUTH\n")
+			fmt.Println("SUCCESS SEND MAIL USING CRAMMD5AUTH")
 		}
 	} else {
 		fmt.Println("SUCCESS SENT MAIL USING PLAINAUTH")
@@ -242,7 +254,8 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 
 	err = u.mailer.SendSimpleMail(student.Email, emailBody)
 	if err!= nil {
-		fmt.Sprintf("FAILED TO SEND MAIL \n %s", err)
+		fmt.Println("FAILED TO SEND MAIL")
+		fmt.Println(err)
 	}
 	return err
 }
