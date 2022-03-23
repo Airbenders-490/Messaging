@@ -178,6 +178,7 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	if err != nil {
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to create email: %s", err.Error()))
 	}
+	fmt.Println("COMPLETED EMAIL BODY")
 	return u.mailer.SendSimpleMail(student.Email, emailBody)
 }
 
