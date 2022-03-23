@@ -197,13 +197,13 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	// PlainAuth will only send the credentials if the connection is using TLS or is
 	// connected to localhost.
 	// Otherwise authentication will fail with an error, without sending the credentials.
-	auth := smtp.PlainAuth("", user, password, smtpHost)
-	fmt.Println("COMPLETED AUTH SETUP ")
-
-	err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{student.Email}, emailBody)
-	if err != nil {
-		fmt.Println("FAILED TO SEND MAIL WITH PLAINAUTH")
-		fmt.Println(err)
+	//auth := smtp.PlainAuth("", user, password, smtpHost)
+	//fmt.Println("COMPLETED AUTH SETUP ")
+	//
+	//err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{student.Email}, emailBody)
+	//if err != nil {
+	//	fmt.Println("FAILED TO SEND MAIL WITH PLAINAUTH")
+	//	fmt.Println(err)
 
 		auth := smtp.CRAMMD5Auth(user, password)
 		err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{student.Email}, emailBody)
@@ -248,9 +248,9 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 		}else {
 			fmt.Println("SUCCESS SEND MAIL USING CRAMMD5AUTH")
 		}
-	} else {
-		fmt.Println("SUCCESS SENT MAIL USING PLAINAUTH")
-	}
+	//} else {
+	//	fmt.Println("SUCCESS SENT MAIL USING PLAINAUTH")
+	//}
 
 	err = u.mailer.SendSimpleMail(student.Email, emailBody)
 	if err!= nil {
