@@ -433,28 +433,28 @@ func TestSendRejection(t *testing.T) {
 		panic(err)
 	}
 
-	//t.Run("success", func(t *testing.T) {
-	//	mockRoomRepository.
-	//		On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
-	//		Return(&mockRoom, nil).Once()
-	//
-	//	mockStudentRepository.
-	//		On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
-	//		Return(&mockStudent, nil).Once()
-	//
-	//	mockRoomRepository.
-	//		On("RemoveParticipantFromRoom", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
-	//		Return(nil).Once()
-	//
-	//	mockMailer.
-	//		On("SendSimpleMail", mock.AnythingOfType("string"), mock.Anything).
-	//		Return(nil).Once()
-	//
-	//	err := u.SendRejection(context.TODO(), "", "", "")
-	//
-	//	assert.NoError(t, err)
-	//	mockMessageRepository.AssertExpectations(t)
-	//})
+	t.Run("success", func(t *testing.T) {
+		mockRoomRepository.
+			On("GetRoom", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockRoom, nil).Once()
+
+		mockStudentRepository.
+			On("GetStudent", mock.Anything, mock.AnythingOfType("string")).
+			Return(&mockStudent, nil).Once()
+
+		mockRoomRepository.
+			On("RemoveParticipantFromRoom", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
+			Return(nil).Once()
+
+		mockMailer.
+			On("SendSimpleMail", mock.AnythingOfType("string"), mock.Anything).
+			Return(nil).Once()
+
+		err := u.SendRejection(context.TODO(), "", "", "")
+
+		assert.NoError(t, err)
+		mockMessageRepository.AssertExpectations(t)
+	})
 
 	t.Run("error: room does not exist", func(t *testing.T) {
 		mockRoomRepository.

@@ -18,6 +18,8 @@ RUN go build -o main .
 # Move to /bin directory as the place for resulting binary
 WORKDIR /bin
 
+COPY static .
+
 # Copy binary from rootDir/main to current /bin folder
 RUN cp /"$ROOT_DIR"/main .
 

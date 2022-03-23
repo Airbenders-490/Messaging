@@ -7,10 +7,9 @@ import (
 	"chat/utils/errors"
 	"context"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
-	"path/filepath"
+	"path"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -183,64 +182,22 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 }
 
 func createEmailBody(student *domain.Student, team string) ([]byte, error) {
-	ex, err := os.Executable()
+	cwd, err := os.Getwd()
 	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
-	fmt.Println(exPath)
-
-	fmt.Println("current dir:")
-	files, err := ioutil.ReadDir("./")
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, f := range files {
-		fmt.Println(f.Name())
-	}
-	fmt.Println("1 step back:")
-	files, err = ioutil.ReadDir("./..")
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, f := range files {
-		fmt.Println(f.Name())
-	}
-	fmt.Println("2 step back:")
-	files, err = ioutil.ReadDir("./../..")
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, f := range files {
-		fmt.Println(f.Name())
+		return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to retrieve current working directory\n %s", err))
 	}
 
-	path, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
+	var pathToFile string
+	if strings.Contains(cwd, "bin") {
+		pathToFile = path.Join(cwd, "rejection_template.html")
+	} else {
+		pathToFile = path.Join(cwd, "static", "rejection_template.html")
 	}
-	fmt.Sprintln("my current dir: ", path)  // for example /home/user
-
-	path, err = os.Executable()
+	t, err := template.ParseFiles(pathToFile)
 	if err != nil {
-		log.Println(err)
+		return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file\n %s", err))
 	}
-	fmt.Sprintln("executable path: ", path) // for example /tmp/go-build872132473/b001/exe/main
 
-	t, err := template.ParseFiles("./chat/static/rejection_template.html")
-	if err != nil {
-		t, err = template.ParseFiles("./static/rejection_template.html")
-		if err != nil {
-			t, err = template.ParseFiles("../../static/rejection_template.html")
-			if err != nil {
-				t, err = template.ParseFiles("../chat/static/rejection_template.html")
-				if err != nil {
-					return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file from filepath!?! %s : %s",exPath, err))
-				}
-			}
-		}
-
-	}
 	var body bytes.Buffer
 
 	message := fmt.Sprintf("From: %s\r\n", os.Getenv("EMAIL_FROM"))
