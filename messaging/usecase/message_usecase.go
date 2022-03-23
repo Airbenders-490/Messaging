@@ -180,7 +180,8 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	if err != nil {
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to create email: %s", err.Error()))
 	}
-	fmt.Println("COMPLETED EMAIL BODY")
+	fmt.Println("COMPLETED EMAIL BODY!!")
+	fmt.Println(emailBody)
 
 	from:=     "soen490airbenders@gmail.com"
 	user:=     "035a001030be3b"
@@ -248,6 +249,7 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 }
 
 func createEmailBody(student *domain.Student, team string) ([]byte, error) {
+	fmt.Println("CREATING EMAIL BODY...")
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to retrieve current working directory\n %s", err))
@@ -263,10 +265,11 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file\n %s", err))
 	}
+	fmt.Println("FOUND REJECTION HTML!")
 
 	var body bytes.Buffer
-
-	message := fmt.Sprintf("From: %s\r\n", os.Getenv("EMAIL_FROM"))
+	fmt.Sprintf("EMAIL FROM: %s", os.Getenv("EMAIL_FROM"))
+	message := fmt.Sprintf("From: %s\r\n", "soen490airbenders@gmail.com")
 	message += fmt.Sprintf("To: %s\r\n", student.Email)
 	message += "Subject: Team Request\r\n"
 	message += "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
@@ -280,6 +283,6 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 		Name: student.FirstName,
 		Team: team,
 	})
-
+	fmt.Println("COMPLETED WRITING MESSAGE TO BUFFER")
 	return body.Bytes(), nil
 }
