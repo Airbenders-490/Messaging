@@ -181,7 +181,6 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to create email: %s", err.Error()))
 	}
 	fmt.Println("COMPLETED EMAIL BODY!!")
-	fmt.Println(emailBody)
 
 	from:=     "soen490airbenders@gmail.com"
 	user:=     "035a001030be3b"
@@ -268,7 +267,8 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 	fmt.Println("FOUND REJECTION HTML!")
 
 	var body bytes.Buffer
-	fmt.Sprintf("EMAIL FROM: %s", os.Getenv("EMAIL_FROM"))
+	//fmt.Println("EMAIL FROM: ")
+	//fmt.Println(os.Getenv("EMAIL_FROM"))
 	message := fmt.Sprintf("From: %s\r\n", "soen490airbenders@gmail.com")
 	message += fmt.Sprintf("To: %s\r\n", student.Email)
 	message += "Subject: Team Request\r\n"
