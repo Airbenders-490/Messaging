@@ -37,6 +37,12 @@ func main() {
 	}
 	fmt.Printf("Hostname: %s\n", hostname)
 
+	_, err = net.Dial("tcp", addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("SUCCESS DIAL MAILTRAP")
+
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
 		log.Fatal(err)
