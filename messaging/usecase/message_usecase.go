@@ -7,13 +7,13 @@ import (
 	"chat/utils/errors"
 	"context"
 	"fmt"
+	"github.com/mailgun/mailgun-go/v4"
 	"log"
 	"os"
 	"path"
 	"strings"
 	"text/template"
 	"time"
-	"github.com/mailgun/mailgun-go/v4"
 )
 
 type messageUseCase struct {

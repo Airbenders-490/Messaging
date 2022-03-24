@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/smtp"
 	"os"
 )
@@ -34,7 +35,16 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Printf("Hostname: %s", hostname)
+	fmt.Printf("Hostname: %s\n", hostname)
+
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	fmt.Printf("HOST IP?: %s\n", localAddr)
 
 	auth := smtp.PlainAuth("", user, password, host)
 fmt.Println("PLAIN AUTH USED")
