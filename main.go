@@ -30,7 +30,7 @@ func main() {
 		"Email body\r\n")
 
 	auth := smtp.PlainAuth("", user, password, host)
-
+fmt.Println("PLAIN AUTH USED")
 	err := smtp.SendMail(addr, auth, from, to, msg)
 
 	if err != nil {
