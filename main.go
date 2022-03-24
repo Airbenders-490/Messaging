@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/smtp"
+	"os"
 )
 
 func main() {
@@ -28,10 +29,16 @@ func main() {
 		"To: roger.roe@example.com\r\n" +
 		"Subject: Test mail\r\n\r\n" +
 		"Email body\r\n")
+	hostname, err := os.Hostname()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Printf("Hostname: %s", hostname)
 
 	auth := smtp.PlainAuth("", user, password, host)
 fmt.Println("PLAIN AUTH USED")
-	err := smtp.SendMail(addr, auth, from, to, msg)
+	err = smtp.SendMail(addr, auth, from, to, msg)
 
 	if err != nil {
 		log.Fatal(err)
