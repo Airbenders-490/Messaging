@@ -9,6 +9,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"gopkg.in/gomail.v2"
+	"log"
+	"net/smtp"
 	"os"
 	"path"
 	"strings"
@@ -185,8 +187,8 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	from:=     "soen490airbenders@gmail.com"
 	user:=     "035a001030be3b"
 	password:= "5a1e6e53f5f9d8"
-	smtpHost:= "smtp.mailtrap.io"
-	smtpPort:= "2525"
+	smtpHost:= "smtp.gmail.com"
+	smtpPort:= "587"
 
 	fmt.Println(from)
 	fmt.Println(user)
@@ -200,12 +202,26 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	m.SetHeader("Subject", "Hello!")
 	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
 
-	d := gomail.NewDialer(smtpHost, 465, user, password)
+	d := gomail.NewDialer(smtpHost, 587, "soen490airbenders@gmail.com", "airbenders-soen-490")
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	fmt.Println("NEW DIALER CREATED")
 	// Send the email to Bob, Cora and Dan.
 	if err := d.DialAndSend(m); err != nil {
-		panic(err)
+			fmt.Println("failed gomail gmail dial and send")
+
+		msg := "From: " + from + "\n" +
+			"To: " + "soen390erps@gmail.com" + "\n" +
+			"Subject: Hello there\n\n"
+
+		err := smtp.SendMail("smtp.gmail.com:587",
+			smtp.PlainAuth("", "soen490airbenders@gmail.com", "airbenders-soen-490", "smtp.gmail.com"),
+			from, []string{"soen390erps@gmail.com"}, []byte(msg))
+
+		if err != nil {
+			log.Printf("smtp error: %s", err)
+			panic(err)
+		}
+
 	}
 
 	// Create a new email - specify the SMTP host:port and auth (if needed)
