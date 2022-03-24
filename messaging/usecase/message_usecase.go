@@ -6,16 +6,14 @@ import (
 	"chat/utils"
 	"chat/utils/errors"
 	"context"
-	"crypto/tls"
 	"fmt"
-	"gopkg.in/gomail.v2"
 	"log"
-	"net/smtp"
 	"os"
 	"path"
 	"strings"
 	"text/template"
 	"time"
+	"github.com/mailgun/mailgun-go/v4"
 )
 
 type messageUseCase struct {
@@ -196,33 +194,65 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 	fmt.Println(smtpHost)
 	fmt.Println(smtpPort)
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", from)
-	m.SetHeader("To", student.Email)
-	m.SetHeader("Subject", "Hello!")
-	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
+	// Your available domain names can be found here:
+	// (https://app.mailgun.com/app/domains)
+	var yourDomain string = "sandbox4ed61a0705f145d7a9a1f810864489f0.mailgun.org" // e.g. mg.yourcompany.com
 
-	d := gomail.NewDialer(smtpHost, 587, "soen490airbenders@gmail.com", "airbenders-soen-490")
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	fmt.Println("NEW DIALER CREATED")
-	// Send the email to Bob, Cora and Dan.
-	if err := d.DialAndSend(m); err != nil {
-			fmt.Println("failed gomail gmail dial and send")
+	// You can find the Private API Key in your Account Menu, under "Settings":
+	// (https://app.mailgun.com/app/account/security)
+	var privateAPIKey string = "2f40f5e6fe2694aca3dff2edfd00f382-0677517f-ca0120e6"
 
-		msg := "From: " + from + "\n" +
-			"To: " + "soen390erps@gmail.com" + "\n" +
-			"Subject: Hello there\n\n"
+		// Create an instance of the Mailgun Client
+		mg := mailgun.NewMailgun(yourDomain, privateAPIKey)
 
-		err := smtp.SendMail("smtp.gmail.com:587",
-			smtp.PlainAuth("", "soen490airbenders@gmail.com", "airbenders-soen-490", "smtp.gmail.com"),
-			from, []string{"soen390erps@gmail.com"}, []byte(msg))
+		sender := from
+		subject := "Fancy subject!"
+		body := "Hello from Mailgun Go!"
+		recipient := "soen390erps@gmail.com"
+
+		// The message object allows you to add attachments and Bcc recipients
+		message := mg.NewMessage(sender, subject, body, recipient)
+
+		ctx, cancel = context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+
+		// Send the message with a 10 second timeout
+		resp, id, err := mg.Send(ctx, message)
 
 		if err != nil {
-			log.Printf("smtp error: %s", err)
-			panic(err)
+			fmt.Println("FAILED TO SEND WITH MAILGUN")
+			log.Fatal(err)
 		}
 
-	}
+		fmt.Printf("ID: %s Resp: %s\n", id, resp)
+
+	//m := gomail.NewMessage()
+	//m.SetHeader("From", from)
+	//m.SetHeader("To", student.Email)
+	//m.SetHeader("Subject", "Hello!")
+	//m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
+
+	//d := gomail.NewDialer(smtpHost, 587, "soen490airbenders@gmail.com", "airbenders-soen-490")
+	//d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	//fmt.Println("NEW DIALER CREATED")
+	//// Send the email to Bob, Cora and Dan.
+	//if err := d.DialAndSend(m); err != nil {
+	//		fmt.Println("failed gomail gmail dial and send")
+	//
+	//	msg := "From: " + from + "\n" +
+	//		"To: " + "soen390erps@gmail.com" + "\n" +
+	//		"Subject: Hello there\n\n"
+	//
+	//	err := smtp.SendMail("smtp.gmail.com:587",
+	//		smtp.PlainAuth("", "soen490airbenders@gmail.com", "airbenders-soen-490", "smtp.gmail.com"),
+	//		from, []string{"soen390erps@gmail.com"}, []byte(msg))
+	//
+	//	if err != nil {
+	//		log.Printf("smtp error: %s", err)
+	//		panic(err)
+	//	}
+	//
+	//}
 
 	// Create a new email - specify the SMTP host:port and auth (if needed)
 	//mail := mailyak.New(fmt.Sprintf("%s:%s", smtpHost, smtpPort), nil)

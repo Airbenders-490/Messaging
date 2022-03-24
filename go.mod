@@ -15,6 +15,9 @@ require (
 
 require (
 	github.com/domodwyer/mailyak/v3 v3.3.3 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/mailgun/mailgun-go/v4 v4.6.0 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
 )
@@ -29,7 +32,7 @@ require (
 	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
-	github.com/json-iterator/go v1.1.9 // indirect
+	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
