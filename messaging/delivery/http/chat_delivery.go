@@ -340,7 +340,7 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	var message domain.Message
 	err := c.ShouldBindJSON(&message)
 	if err != nil || message.FromStudentID == "" || message.SentTimestamp.IsZero() {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("invalid request body"))
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(invalidRequestBody))
 		return
 	}
 
