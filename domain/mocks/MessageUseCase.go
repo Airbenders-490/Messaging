@@ -16,13 +16,13 @@ type MessageUseCase struct {
 	mock.Mock
 }
 
-// DeleteMessage provides a mock function with given fields: ctx, roomID, timeStamp, userID
-func (_m *MessageUseCase) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time, userID string) error {
-	ret := _m.Called(ctx, roomID, timeStamp, userID)
+// DeleteMessage provides a mock function with given fields: ctx, message
+func (_m *MessageUseCase) DeleteMessage(ctx context.Context, message *domain.Message) error {
+	ret := _m.Called(ctx, message)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time, string) error); ok {
-		r0 = rf(ctx, roomID, timeStamp, userID)
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.Message) error); ok {
+		r0 = rf(ctx, message)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -30,13 +30,13 @@ func (_m *MessageUseCase) DeleteMessage(ctx context.Context, roomID string, time
 	return r0
 }
 
-// EditMessage provides a mock function with given fields: ctx, roomID, userID, timeStamp, message
-func (_m *MessageUseCase) EditMessage(ctx context.Context, roomID string, userID string, timeStamp time.Time, message string) (*domain.Message, error) {
-	ret := _m.Called(ctx, roomID, userID, timeStamp, message)
+// EditMessage provides a mock function with given fields: ctx, message
+func (_m *MessageUseCase) EditMessage(ctx context.Context, message *domain.Message) (*domain.Message, error) {
+	ret := _m.Called(ctx, message)
 
 	var r0 *domain.Message
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, time.Time, string) *domain.Message); ok {
-		r0 = rf(ctx, roomID, userID, timeStamp, message)
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.Message) *domain.Message); ok {
+		r0 = rf(ctx, message)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*domain.Message)
@@ -44,8 +44,8 @@ func (_m *MessageUseCase) EditMessage(ctx context.Context, roomID string, userID
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, time.Time, string) error); ok {
-		r1 = rf(ctx, roomID, userID, timeStamp, message)
+	if rf, ok := ret.Get(1).(func(context.Context, *domain.Message) error); ok {
+		r1 = rf(ctx, message)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -47,10 +47,10 @@ func (m *MessageRepository) EditMessage(ctx context.Context, message *domain.Mes
 	return nil
 }
 
-func (m *MessageRepository) GetMessage(ctx context.Context, roomID string, timeStamp time.Time) (*domain.Message, error) {
+func (m *MessageRepository) GetMessage(ctx context.Context, message *domain.Message) (*domain.Message, error) {
 	var retrievedMsg domain.Message
 
-	err := m.dbSession.Query(getMessage, roomID, timeStamp).WithContext(ctx).
+	err := m.dbSession.Query(getMessage, message.RoomID, message.SentTimestamp).WithContext(ctx).
 		Scan(&retrievedMsg.RoomID, &retrievedMsg.SentTimestamp, &retrievedMsg.FromStudentID, &retrievedMsg.MessageBody)
 	if err != nil {
 		return nil, err
@@ -82,12 +82,6 @@ func (m *MessageRepository) GetMessages(ctx context.Context, roomID string, time
 	return retrievedMessages, nil
 }
 
-func (m *MessageRepository) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error {
-	return m.dbSession.Query(deleteMessage, roomID, timeStamp).WithContext(ctx).Exec()
-	//
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//return nil
+func (m *MessageRepository) DeleteMessage(ctx context.Context, message *domain.Message) error {
+	return m.dbSession.Query(deleteMessage, message.RoomID, message.SentTimestamp).WithContext(ctx).Exec()
 }

@@ -280,8 +280,7 @@ func TestEditMessage(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		putBody, err := json.Marshal(editedMessage)
 		assert.NoError(t, err)
-		mockUseCase.On("EditMessage", mock.Anything, mock.AnythingOfType("string"),
-			mock.AnythingOfType("string"), mock.Anything, mock.AnythingOfType("string")).
+		mockUseCase.On("EditMessage", mock.Anything, mock.Anything).
 			Return(&editedMessage, nil).Once()
 
 		reader := strings.NewReader(string(putBody))
@@ -324,8 +323,7 @@ func TestEditMessage(t *testing.T) {
 		putBody, err := json.Marshal(editedMessage)
 		assert.NoError(t, err)
 		restErr := errors.NewConflictError(errorOccurredMessage)
-		mockUseCase.On("EditMessage", mock.Anything, mock.AnythingOfType("string"),
-			mock.AnythingOfType("string"), mock.Anything, mock.AnythingOfType("string")).
+		mockUseCase.On("EditMessage", mock.Anything, mock.Anything).
 			Return(nil, restErr).Once()
 
 		reader := strings.NewReader(string(putBody))
@@ -354,8 +352,7 @@ func TestDeleteMessage(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		putBody, err := json.Marshal(deletedMessage)
 		assert.NoError(t, err)
-		mockUseCase.On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"),
-			mock.Anything, mock.AnythingOfType("string")).
+		mockUseCase.On("DeleteMessage", mock.Anything, mock.Anything).
 			Return(nil).Once()
 
 		reader := strings.NewReader(string(putBody))
@@ -399,8 +396,7 @@ func TestDeleteMessage(t *testing.T) {
 		putBody, err := json.Marshal(deletedMessage)
 		assert.NoError(t, err)
 		restErr := errors.NewConflictError(errorOccurredMessage)
-		mockUseCase.On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"),
-			mock.Anything, mock.AnythingOfType("string")).Return(restErr).Once()
+		mockUseCase.On("DeleteMessage", mock.Anything, mock.Anything).Return(restErr).Once()
 
 		reader := strings.NewReader(string(putBody))
 		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(putChatPath,

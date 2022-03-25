@@ -318,7 +318,7 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 		return
 	}
 
-	editedMessage, err := h.u.EditMessage(ctx, message.RoomID, message.FromStudentID, message.SentTimestamp, message.MessageBody)
+	editedMessage, err := h.u.EditMessage(ctx, &message)
 
 	if err != nil {
 		errors.SetRESTError(err, c)
@@ -350,7 +350,7 @@ func (h *MessageHandler) DeleteMessage(c *gin.Context) {
 	}
 
 	message.RoomID = room
-	err = h.u.DeleteMessage(ctx, message.RoomID, message.SentTimestamp, message.FromStudentID)
+	err = h.u.DeleteMessage(ctx, &message)
 	if err != nil {
 		errors.SetRESTError(err, c)
 		return

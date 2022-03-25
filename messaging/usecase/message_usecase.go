@@ -58,28 +58,28 @@ func (u *messageUseCase) SaveMessage(ctx context.Context, message *domain.Messag
 	return u.messageRepository.SaveMessage(c, message)
 }
 
-func (u *messageUseCase) EditMessage(ctx context.Context, roomID string, userID string, timeStamp time.Time, message string) (*domain.Message, error) {
+func (u *messageUseCase) EditMessage(ctx context.Context, message *domain.Message) (*domain.Message, error) {
 	c, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
-	existingMessage, err := u.messageRepository.GetMessage(ctx, roomID, timeStamp)
+	existingMessage, err := u.messageRepository.GetMessage(c, message)
 	if err != nil {
 		return nil, errors.NewNotFoundError("Message does not exist")
 	}
 
-	if userID != existingMessage.FromStudentID {
+	if message.FromStudentID != existingMessage.FromStudentID {
 		return nil, errors.NewUnauthorizedError("Users can only edit their own messages")
 	}
 
-	if message == existingMessage.MessageBody {
+	if message.MessageBody == existingMessage.MessageBody {
 		return existingMessage, nil
 	}
 
-	if message == "" {
-		return nil, u.messageRepository.DeleteMessage(c, roomID, timeStamp)
+	if message.MessageBody == "" {
+		return nil, u.messageRepository.DeleteMessage(c, existingMessage)
 	}
 
-	existingMessage.MessageBody = message
+	existingMessage.MessageBody = message.MessageBody
 	err = u.messageRepository.EditMessage(c, existingMessage)
 
 	if err != nil {
@@ -101,20 +101,20 @@ func (u *messageUseCase) GetMessages(ctx context.Context, roomID string, timeSta
 	return retrievedMessages, nil
 }
 
-func (u *messageUseCase) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time, userID string) error {
+func (u *messageUseCase) DeleteMessage(ctx context.Context, message *domain.Message) error {
 	c, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
-	existingMessage, err := u.messageRepository.GetMessage(ctx, roomID, timeStamp)
+	existingMessage, err := u.messageRepository.GetMessage(ctx, message)
 	if err != nil {
 		return errors.NewNotFoundError("Message does not exist")
 	}
 
-	if userID != existingMessage.FromStudentID {
+	if message.FromStudentID != existingMessage.FromStudentID {
 		return errors.NewUnauthorizedError("Users can only delete their own messages")
 	}
 
-	return u.messageRepository.DeleteMessage(c, roomID, timeStamp)
+	return u.messageRepository.DeleteMessage(c, message)
 }
 
 func (u *messageUseCase) JoinRequest(ctx context.Context, roomID string, userID string, timeStamp time.Time) error {

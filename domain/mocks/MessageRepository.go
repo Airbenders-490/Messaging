@@ -16,13 +16,13 @@ type MessageRepository struct {
 	mock.Mock
 }
 
-// DeleteMessage provides a mock function with given fields: ctx, roomID, timeStamp
-func (_m *MessageRepository) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error {
-	ret := _m.Called(ctx, roomID, timeStamp)
+// DeleteMessage provides a mock function with given fields: ctx, message
+func (_m *MessageRepository) DeleteMessage(ctx context.Context, message *domain.Message) error {
+	ret := _m.Called(ctx, message)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time) error); ok {
-		r0 = rf(ctx, roomID, timeStamp)
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.Message) error); ok {
+		r0 = rf(ctx, message)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -44,13 +44,13 @@ func (_m *MessageRepository) EditMessage(ctx context.Context, message *domain.Me
 	return r0
 }
 
-// GetMessage provides a mock function with given fields: ctx, roomID, timeStamp
-func (_m *MessageRepository) GetMessage(ctx context.Context, roomID string, timeStamp time.Time) (*domain.Message, error) {
-	ret := _m.Called(ctx, roomID, timeStamp)
+// GetMessage provides a mock function with given fields: ctx, message
+func (_m *MessageRepository) GetMessage(ctx context.Context, message *domain.Message) (*domain.Message, error) {
+	ret := _m.Called(ctx, message)
 
 	var r0 *domain.Message
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time) *domain.Message); ok {
-		r0 = rf(ctx, roomID, timeStamp)
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.Message) *domain.Message); ok {
+		r0 = rf(ctx, message)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*domain.Message)
@@ -58,8 +58,8 @@ func (_m *MessageRepository) GetMessage(ctx context.Context, roomID string, time
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, time.Time) error); ok {
-		r1 = rf(ctx, roomID, timeStamp)
+	if rf, ok := ret.Get(1).(func(context.Context, *domain.Message) error); ok {
+		r1 = rf(ctx, message)
 	} else {
 		r1 = ret.Error(1)
 	}

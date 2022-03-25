@@ -143,7 +143,7 @@ func TestGetMessageSuccess(t *testing.T) {
 	query.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil)
 
-	_, err := cr.GetMessage(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp)
+	_, err := cr.GetMessage(context.Background(), &mockMessage)
 
 	assert.NoError(t, err)
 
@@ -162,7 +162,7 @@ func TestGetMessageError(t *testing.T) {
 	query.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(errors.New("error"))
 
-	_, err := cr.GetMessage(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp)
+	_, err := cr.GetMessage(context.Background(), &mockMessage)
 
 	assert.Error(t, err)
 
@@ -256,7 +256,7 @@ func TestDeleteMessageSuccess(t *testing.T) {
 		Return(query)
 	query.On("Exec").Return(nil)
 
-	err := cr.DeleteMessage(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp)
+	err := cr.DeleteMessage(context.Background(), &mockMessage)
 
 	assert.NoError(t, err)
 
@@ -274,44 +274,11 @@ func TestDeleteMessageError(t *testing.T) {
 		Return(query)
 	query.On("Exec").Return(errors.New(internalErrorMessage))
 
-	err := cr.DeleteMessage(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp)
+	err := cr.DeleteMessage(context.Background(), &mockMessage)
 
 	assert.Error(t, err)
 
 	session.AssertExpectations(t)
 }
 
-//func TestDeleteMessage(t *testing.T){
-//	t.Parallel()
-//	faker.FakeData(&mockMessage)
-//	reset()
-//	t.Run("succes", func(t *testing.T) {
-//		session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything).
-//			Return(query)
-//		query.On("WithContext", mock.Anything).
-//			Return(query)
-//		query.On("Exec").Return(nil)
-//
-//		err := cr.DeleteMessage(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp)
-//
-//		assert.NoError(t, err)
-//
-//		session.AssertExpectations(t)
-//		reset()
-//	})
-//
-//	t.Run("succes", func(t *testing.T) {
-//		session.On("Query",mock.AnythingOfType("string"), mock.Anything, mock.Anything).
-//			Return(query)
-//		query.On("WithContext", mock.Anything).
-//			Return(query)
-//		query.On("Exec").Return(errors.New(internalErrorMessage))
-//
-//		err := cr.DeleteMessage(context.Background(), mockMessage.RoomID, mockMessage.SentTimestamp)
-//
-//		assert.Error(t, err)
-//
-//		session.AssertExpectations(t)
-//		reset()
-//	})
-//}
+

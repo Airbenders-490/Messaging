@@ -60,15 +60,16 @@ func TestEditMessage(t *testing.T) {
 	u := NewMessageUseCase(time.Second*2, mockMessageRepository, nil, nil, nil)
 
 	t.Run("success", func(t *testing.T) {
+		mockMessage2 := mockMessage
+		mockMessage2.MessageBody = "test"
 		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
-			Return(&mockMessage, nil).Once()
+			On("GetMessage", mock.Anything, mock.Anything).
+			Return(&mockMessage2, nil).Once()
 		mockMessageRepository.
-			On("EditMessage", mock.Anything, mock.AnythingOfType(messageType)).
+			On("EditMessage", mock.Anything,mock.Anything).
 			Return(nil).Once()
 
-		editedMsg, err := u.EditMessage(context.TODO(), mockMessage.RoomID, mockMessage.FromStudentID,
-			mockMessage.SentTimestamp, "edited message")
+		editedMsg, err := u.EditMessage(context.TODO(), &mockMessage)
 
 		assert.NoError(t, err)
 
@@ -79,11 +80,10 @@ func TestEditMessage(t *testing.T) {
 
 	t.Run("message is the same", func(t *testing.T) {
 		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("GetMessage", mock.Anything, mock.Anything).
 			Return(&mockMessage, nil).Once()
 
-		editedMsg, err := u.EditMessage(context.TODO(), mockMessage.RoomID, mockMessage.FromStudentID,
-			mockMessage.SentTimestamp, mockMessage.MessageBody)
+		editedMsg, err := u.EditMessage(context.TODO(), &mockMessage)
 
 		assert.NoError(t, err)
 
@@ -94,11 +94,10 @@ func TestEditMessage(t *testing.T) {
 
 	t.Run("message does not exist", func(t *testing.T) {
 		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("GetMessage", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).Once()
 
-		_, err := u.EditMessage(context.TODO(), mockMessage.RoomID, mockMessage.FromStudentID,
-			mockMessage.SentTimestamp, mockMessage.MessageBody)
+		_, err := u.EditMessage(context.TODO(), &mockMessage)
 
 		assert.Error(t, err)
 
@@ -109,11 +108,27 @@ func TestEditMessage(t *testing.T) {
 		var msg domain.Message
 		faker.FakeData(&msg)
 		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("GetMessage", mock.Anything, mock.Anything).
 			Return(&msg, nil).Once()
 
-		_, err := u.EditMessage(context.TODO(), mockMessage.RoomID, mockMessage.FromStudentID,
-			mockMessage.SentTimestamp, mockMessage.MessageBody)
+		_, err := u.EditMessage(context.TODO(), &mockMessage)
+
+		assert.Error(t, err)
+
+		mockMessageRepository.AssertExpectations(t)
+	})
+
+	t.Run("error editing message", func(t *testing.T) {
+		mockMessage2 := mockMessage
+		mockMessage2.MessageBody = "test message"
+		mockMessageRepository.
+			On("GetMessage", mock.Anything, mock.Anything).
+			Return(&mockMessage2, nil).Once()
+		mockMessageRepository.
+			On("EditMessage", mock.Anything, mock.AnythingOfType(messageType)).
+			Return(errors.New("error")).Once()
+
+		_, err := u.EditMessage(context.TODO(), &mockMessage)
 
 		assert.Error(t, err)
 
@@ -121,37 +136,25 @@ func TestEditMessage(t *testing.T) {
 	})
 
 	t.Run("message is empty", func(t *testing.T) {
-		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
-			Return(&mockMessage, nil).Once()
+		mockMessage2 := mockMessage
 
 		mockMessageRepository.
-			On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("GetMessage", mock.Anything, mock.Anything).
+			Return(&mockMessage2, nil).Once()
+
+		mockMessageRepository.
+			On("DeleteMessage", mock.Anything, mock.Anything).
 			Return(nil).Once()
 
-		_, err := u.EditMessage(context.TODO(), mockMessage.RoomID, mockMessage.FromStudentID,
-			mockMessage.SentTimestamp, "")
+		mockMessage.MessageBody = ""
+		_, err := u.EditMessage(context.TODO(), &mockMessage)
 
 		assert.NoError(t, err)
 
 		mockMessageRepository.AssertExpectations(t)
 	})
 
-	t.Run("error editing message", func(t *testing.T) {
-		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
-			Return(&mockMessage, nil).Once()
-		mockMessageRepository.
-			On("EditMessage", mock.Anything, mock.AnythingOfType(messageType)).
-			Return(errors.New("error")).Once()
 
-		_, err := u.EditMessage(context.TODO(), mockMessage.RoomID, mockMessage.FromStudentID,
-			mockMessage.SentTimestamp, "editedMessage")
-
-		assert.Error(t, err)
-
-		mockMessageRepository.AssertExpectations(t)
-	})
 }
 
 func TestGetMessages(t *testing.T) {
@@ -200,14 +203,14 @@ func TestDeleteMessage(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		mockMessageRepository.
-			On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("DeleteMessage", mock.Anything, mock.Anything).
 			Return(nil).Once()
 
 		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("GetMessage", mock.Anything, mock.Anything).
 			Return(&mockMessage, nil).Once()
 
-		err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
+		err := u.DeleteMessage(context.TODO(), &mockMessage)
 
 		assert.NoError(t, err)
 
@@ -216,10 +219,10 @@ func TestDeleteMessage(t *testing.T) {
 
 	t.Run("error: message does not exist", func(t *testing.T) {
 		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("GetMessage", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).Once()
 
-		err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
+		err := u.DeleteMessage(context.TODO(), &mockMessage)
 
 		assert.Error(t, err)
 
@@ -230,10 +233,10 @@ func TestDeleteMessage(t *testing.T) {
 		var msg domain.Message
 		faker.FakeData(msg)
 		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("GetMessage", mock.Anything, mock.Anything).
 			Return(&msg, nil).Once()
 
-		err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
+		err := u.DeleteMessage(context.TODO(), &mockMessage)
 
 		assert.Error(t, err)
 
@@ -243,14 +246,14 @@ func TestDeleteMessage(t *testing.T) {
 
 	t.Run("error unable to delete", func(t *testing.T) {
 		mockMessageRepository.
-			On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("DeleteMessage", mock.Anything, mock.Anything).
 			Return(errors.New("error")).Once()
 
 		mockMessageRepository.
-			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
+			On("GetMessage", mock.Anything, mock.Anything).
 			Return(&mockMessage, nil).Once()
 
-		err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
+		err := u.DeleteMessage(context.TODO(), &mockMessage)
 
 		assert.Error(t, err)
 
