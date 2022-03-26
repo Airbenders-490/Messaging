@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS  chat.room (
     Admin text,
     students map<text, boolean>, -- map< userID, isPendingState >
     deleted timestamp,
-    class text
+    class text,
+    maxParticipants int
 );
 
 CREATE TABLE IF NOT EXISTS chat.student_rooms (
@@ -33,10 +34,10 @@ CREATE TABLE IF NOT EXISTS chat.student (
 
 -- michael is eaf54fae-1ab8-4b5a-8047-51904f6ae884
 -- dwight is 172ff420-f0eb-4d75-a26b-8d058a8499ec
-INSERT INTO chat.room (roomid, admin, name, students, class) VALUES ('office', 'eaf54fae-1ab8-4b5a-8047-51904f6ae884', 'office', {'eaf54fae-1ab8-4b5a-8047-51904f6ae884': false, 'toby': false, '172ff420-f0eb-4d75-a26b-8d058a8499ec': false}, 'soen490');
+INSERT INTO chat.room (roomid, admin, name, students, class, maxParticipants) VALUES ('office', 'eaf54fae-1ab8-4b5a-8047-51904f6ae884', 'office', {'eaf54fae-1ab8-4b5a-8047-51904f6ae884': false, 'toby': false, '172ff420-f0eb-4d75-a26b-8d058a8499ec': false}, 'soen490', 5);
 INSERT INTO chat.student_rooms (student, rooms) VALUES ('eaf54fae-1ab8-4b5a-8047-51904f6ae884', {'office'});
 INSERT INTO chat.student_rooms (student, rooms) VALUES ('toby', {'office'});
-INSERT INTO chat.room (roomid, admin, name, students, class) VALUES ('allstars', '172ff420-f0eb-4d75-a26b-8d058a8499ec' , 'allstars', {'172ff420-f0eb-4d75-a26b-8d058a8499ec': false, 'jim': false}, 'soen385');
+INSERT INTO chat.room (roomid, admin, name, students, class, maxParticipants) VALUES ('allstars', '172ff420-f0eb-4d75-a26b-8d058a8499ec' , 'allstars', {'172ff420-f0eb-4d75-a26b-8d058a8499ec': false, 'jim': false}, 'soen385', 5);
 INSERT INTO chat.student_rooms (student, rooms) VALUES ('172ff420-f0eb-4d75-a26b-8d058a8499ec', {'allstars', 'office'});
 INSERT INTO chat.student_rooms (student, rooms) VALUES ('jim', {'allstars'});
 INSERT INTO chat.student (student_id, first_name, last_name, email) VALUES ('jim', 'jim', 'halpert', 'jimhalpert@gmail.com');

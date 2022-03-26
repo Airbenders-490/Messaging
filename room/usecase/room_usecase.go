@@ -118,6 +118,7 @@ func (u *roomUseCase) GetChatRoomsFor(ctx context.Context, userID string) (*doma
 		studentChatRooms.Rooms[i].Name = room.Name
 		studentChatRooms.Rooms[i].Students = room.Students
 		studentChatRooms.Rooms[i].Deleted = room.Deleted
+		studentChatRooms.Rooms[i].MaxParticipants = room.MaxParticipants
 
 		for j := range studentChatRooms.Rooms[i].Students {
 			student, err = u.sr.GetStudent(ctx, studentChatRooms.Rooms[i].Students[j].ID)

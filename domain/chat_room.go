@@ -7,12 +7,13 @@ import (
 
 // ChatRoom struct
 type ChatRoom struct {
-	RoomID   string    `json:"room_id"`
-	Name     string    `json:"name"`
-	Admin    Student   `json:"admin"`
-	Deleted  time.Time `json:"deleted"`
-	Students []Student `json:"students"`
-	Class    string    `json:"class"`
+	RoomID   		string    `json:"room_id"`
+	Name     		string    `json:"name"`
+	Admin    		Student   `json:"admin"`
+	Deleted  		time.Time `json:"deleted"`
+	Students 		[]Student `json:"students"`
+	Class    		string    `json:"class"`
+	MaxParticipants int 	  `json:"max_participants"`
 }
 
 // StudentChatRooms struct
