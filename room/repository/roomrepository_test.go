@@ -53,7 +53,7 @@ func TestGetRoomSuccessEmptyRoom(t *testing.T) {
 	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
 	queryMock.On("WithContext", ctx).Return(queryMock)
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
-	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	_, err := rr.GetRoom(ctx, mock.Anything)
 
@@ -68,7 +68,7 @@ func TestGetRoomFail(t *testing.T) {
 	sessionMock.On("Query", mock.Anything, mock.Anything).Return(queryMock)
 	queryMock.On("WithContext", ctx).Return(queryMock)
 	queryMock.On("Consistency", mock.Anything).Return(queryMock)
-	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(internalErrorMessage))
+	queryMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(internalErrorMessage))
 
 	_, err := rr.GetRoom(ctx, mock.Anything)
 
@@ -273,7 +273,7 @@ func TestGetChatRoomsByClassSuccess(t *testing.T) {
 	queryMock.On("Iter").Return(mockIter)
 	mockIter.On("Scanner").Return(scannerMock)
 	scannerMock.On("Next").Return(true).Once()
-	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil).Once()
 	scannerMock.On("Next").Return(false).Once()
 	scannerMock.On("Err").Return(nil).Once()
@@ -293,7 +293,7 @@ func TestGetChatRoomsByClassFailScan(t *testing.T) {
 	mockIter.On("Scanner").Return(scannerMock)
 	scannerMock.On("Next").Return(true).Once()
 
-	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(errors.New(internalErrorMessage)).Once()
 
 	if _, err := rr.GetChatRoomsByClass(ctx, mock.Anything); err == nil {
@@ -310,7 +310,7 @@ func TestGetChatRoomsByClassFailCloseScan(t *testing.T) {
 	queryMock.On("Iter").Return(mockIter)
 	mockIter.On("Scanner").Return(scannerMock)
 	scannerMock.On("Next").Return(true).Once()
-	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	scannerMock.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil)
 	scannerMock.On("Next").Return(false).Once()
 	scannerMock.On("Err").Return(errors.New(internalErrorMessage))

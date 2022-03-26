@@ -23,7 +23,7 @@ const (
 	getRoom                       = `SELECT * FROM chat.room WHERE roomid=?;`
 	getChatRoomsByClass           = `SELECT * FROM chat.room WHERE class=? ALLOW FILTERING;`
 	removeParticipantFromRoom     = `DELETE students[?] FROM chat.room WHERE roomid = ?;`
-	saveRoom                      = `INSERT INTO chat.room (roomid, name, admin, students, class) VALUES (?,?,?,?,?);`
+	saveRoom                      = `INSERT INTO chat.room (roomid, name, admin, students, class, maxParticipants) VALUES (?,?,?,?,?,?);`
 	updateParticipantPendingState = `UPDATE chat.room SET students[?] = ?  WHERE roomid = ?;`
 
 	// chat.student_rooms queries
@@ -45,7 +45,7 @@ func (r RoomRepository) GetRoom(ctx context.Context, roomID string) (*domain.Cha
 	studentMap := make(map[string]bool)
 	var allStudents []domain.Student
 
-	err := r.dbSession.Query(getRoom, roomID).WithContext(ctx).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin.ID, &room.Class, &room.Deleted, &room.Name, &studentMap)
+	err := r.dbSession.Query(getRoom, roomID).WithContext(ctx).Consistency(gocql.One).Scan(&room.RoomID, &room.Admin.ID, &room.Class, &room.Deleted, &room.MaxParticipants, &room.Name, &studentMap)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (r RoomRepository) GetChatRoomsByClass(ctx context.Context, className strin
 
 	for scanner.Next() {
 		var room domain.ChatRoom
-		err := scanner.Scan(&room.RoomID, &room.Admin.ID, &room.Class, &room.Deleted, &room.Name, &studentMap)
+		err := scanner.Scan(&room.RoomID, &room.Admin.ID, &room.Class, &room.Deleted, &room.MaxParticipants, &room.Name, &studentMap)
 
 		if err != nil {
 			return nil, err
@@ -163,7 +163,7 @@ func (r RoomRepository) SaveRoomAndAddRoomForAllParticipants(ctx context.Context
 	}
 	batch.AddBatchEntry(&gocql.BatchEntry{
 		Stmt: saveRoom,
-		Args: []interface{}{room.RoomID, room.Name, room.Admin.ID, studentMap, room.Class},
+		Args: []interface{}{room.RoomID, room.Name, room.Admin.ID, studentMap, room.Class, room.MaxParticipants},
 	})
 
 	// AddRoomForAllParticipants for chat.student_rooms
