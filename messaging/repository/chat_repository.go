@@ -60,7 +60,7 @@ func (m *MessageRepository) GetMessage(ctx context.Context, roomID string, timeS
 }
 
 func (m *MessageRepository) GetMessages(ctx context.Context, roomID string, timeStamp time.Time, limit int) ([]domain.Message, error) {
-	var retrievedMessages []domain.Message
+	retrievedMessages := []domain.Message{}
 	var scanner cassandra.ScannerInterface
 
 	scanner = m.dbSession.Query(getMessages, roomID, timeStamp, limit).WithContext(ctx).Iter().Scanner()
@@ -84,10 +84,4 @@ func (m *MessageRepository) GetMessages(ctx context.Context, roomID string, time
 
 func (m *MessageRepository) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time) error {
 	return m.dbSession.Query(deleteMessage, roomID, timeStamp).WithContext(ctx).Exec()
-	//
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//return nil
 }
