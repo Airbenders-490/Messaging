@@ -103,7 +103,7 @@ func NewHub() hub {
 const (
 	maxMessageSize int64 = 1024
 	pongWait             = time.Minute * 5
-	pingPeriod           = time.Minute * 5
+	pingPeriod           = time.Minute * 4
 	writeWait            = time.Minute
 )
 
