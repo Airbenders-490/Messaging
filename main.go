@@ -18,16 +18,16 @@ func main() {
 	to := "soen390erps@gmail.com"
 
 	// mailtrap
-	user := "035a001030be3b"
-	password := "5a1e6e53f5f9d8"
-	addr := "smtp.mailtrap.io:2525"
-	host := "smtp.mailtrap.io"
+	//user := "035a001030be3b"
+	//password := "5a1e6e53f5f9d8"
+	//addr := "smtp.mailtrap.io:2525"
+	//host := "smtp.mailtrap.io"
 
 	// gmail
-	//user := "soen490airbenders@gmail.com"
-	//password := "airbenders-soen-490"
-	//addr := "smtp.gmail.com:587"
-	//host := "smtp.gmail.com"
+	user := "soen490airbenders@gmail.com"
+	password := "airbenders-soen-490"
+	addr := "smtp.gmail.com:587"
+	host := "smtp.gmail.com"
 
 	msg := "From: soen490airbenders@gmail.com\n" +
 		"To: soen390erps@gmail.com\n" +
