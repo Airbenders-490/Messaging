@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"net/smtp"
-	"os"
 )
 
 func main() {
@@ -15,46 +14,36 @@ func main() {
 
 	//app.Start()
 
-	from := "john.doe@example.com"
-	user := "035a001030be3b"
-	password := "5a1e6e53f5f9d8"
+	from := "soen490airbenders@gmail.com"
+	to := "soen390erps@gmail.com"
 
-	to := []string{
-		"roger.roe@example.com",
-	}
+	// mailtrap
+	//user := "035a001030be3b"
+	//password := "5a1e6e53f5f9d8"
+	//addr := "smtp.mailtrap.io:2525"
+	//host := "smtp.mailtrap.io"
 
-	addr := "smtp.mailtrap.io:2525"
-	host := "smtp.mailtrap.io"
+	// gmail
+	user := "soen490airbenders@gmail.com"
+	password := "airbenders-soen-490"
+	addr := "smtp.gmail.com:587"
+	host := "smtp.gmail.com"
 
-	msg := []byte("From: john.doe@example.com\r\n" +
-		"To: roger.roe@example.com\r\n" +
-		"Subject: Test mail\r\n\r\n" +
-		"Email body\r\n")
-	hostname, err := os.Hostname()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Printf("Hostname: %s\n", hostname)
+	msg := "From: soen490airbenders@gmail.com\n" +
+		"To: soen390erps@gmail.com\n" +
+		"Subject: Test mail\n\n" +
+		"Email body"
 
-	_, err = net.Dial("tcp", addr)
+	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("SUCCESS DIAL MAILTRAP")
-
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println("SUCCESS DIAL SMTP")
 	defer conn.Close()
 
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	fmt.Printf("HOST IP?: %s\n", localAddr)
-
 	auth := smtp.PlainAuth("", user, password, host)
-fmt.Println("PLAIN AUTH USED")
-	err = smtp.SendMail(addr, auth, from, to, msg)
+	fmt.Println("PLAIN AUTH USED")
+	err = smtp.SendMail(addr, auth, from, []string{to}, []byte(msg))
 
 	if err != nil {
 		log.Fatal(err)
