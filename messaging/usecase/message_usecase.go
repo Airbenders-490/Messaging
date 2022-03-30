@@ -7,8 +7,6 @@ import (
 	"chat/utils/errors"
 	"context"
 	"fmt"
-	"github.com/mailgun/mailgun-go/v4"
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -176,173 +174,16 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to remove user from room: %s", err.Error()))
 	}
 
-	_, err = createEmailBody(student, roomID)
+	//_, err = createEmailBody(student, roomID)
+	emailBody, err := createEmailBody(student, roomID)
 	if err != nil {
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to create email: %s", err.Error()))
 	}
-	fmt.Println("COMPLETED EMAIL BODY!!!!")
-
-	from:=     "soen490airbenders@gmail.com"
-	user:=     "035a001030be3b"
-	password:= "5a1e6e53f5f9d8"
-	smtpHost:= "smtp.gmail.com"
-	smtpPort:= "587"
-
-	fmt.Println(from)
-	fmt.Println(user)
-	fmt.Println(password)
-	fmt.Println(smtpHost)
-	fmt.Println(smtpPort)
-
-	// Your available domain names can be found here:
-	// (https://app.mailgun.com/app/domains)
-	var yourDomain string = "sandbox4ed61a0705f145d7a9a1f810864489f0.mailgun.org" // e.g. mg.yourcompany.com
-
-	// You can find the Private API Key in your Account Menu, under "Settings":
-	// (https://app.mailgun.com/app/account/security)
-	var privateAPIKey string = "2f40f5e6fe2694aca3dff2edfd00f382-0677517f-ca0120e6"
-
-		// Create an instance of the Mailgun Client
-		mg := mailgun.NewMailgun(yourDomain, privateAPIKey)
-
-		sender := from
-		subject := "Fancy subject!"
-		body := "Hello from Mailgun Go!"
-		recipient := "soen390erps@gmail.com"
-
-		// The message object allows you to add attachments and Bcc recipients
-		message := mg.NewMessage(sender, subject, body, recipient)
-
-		ctx, cancel = context.WithTimeout(context.Background(), time.Second*10)
-		defer cancel()
-
-		// Send the message with a 10 second timeout
-		resp, id, err := mg.Send(ctx, message)
-
-		if err != nil {
-			fmt.Println("FAILED TO SEND WITH MAILGUN")
-			log.Fatal(err)
-		}
-
-		fmt.Printf("ID: %s Resp: %s\n", id, resp)
-
-	//m := gomail.NewMessage()
-	//m.SetHeader("From", from)
-	//m.SetHeader("To", student.Email)
-	//m.SetHeader("Subject", "Hello!")
-	//m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
-
-	//d := gomail.NewDialer(smtpHost, 587, "soen490airbenders@gmail.com", "airbenders-soen-490")
-	//d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	//fmt.Println("NEW DIALER CREATED")
-	//// Send the email to Bob, Cora and Dan.
-	//if err := d.DialAndSend(m); err != nil {
-	//		fmt.Println("failed gomail gmail dial and send")
-	//
-	//	msg := "From: " + from + "\n" +
-	//		"To: " + "soen390erps@gmail.com" + "\n" +
-	//		"Subject: Hello there\n\n"
-	//
-	//	err := smtp.SendMail("smtp.gmail.com:587",
-	//		smtp.PlainAuth("", "soen490airbenders@gmail.com", "airbenders-soen-490", "smtp.gmail.com"),
-	//		from, []string{"soen390erps@gmail.com"}, []byte(msg))
-	//
-	//	if err != nil {
-	//		log.Printf("smtp error: %s", err)
-	//		panic(err)
-	//	}
-	//
-	//}
-
-	// Create a new email - specify the SMTP host:port and auth (if needed)
-	//mail := mailyak.New(fmt.Sprintf("%s:%s", smtpHost, smtpPort), nil)
-	//
-	//mail.To(student.Email)
-	//mail.From(from)
-	//mail.FromName("momas")
-	//mail.Subject("REJECTION")
-	//
-	//// mail.HTML() and mail.Plain() implement io.Writer, so you can do handy things like
-	//// parse a template directly into the email body
-	//if _, err := io.WriteString(mail.HTML(), "So long, and thanks for all the fish."); err != nil {
-	//	panic(" :( ")
-	//}
-	//
-	//// Or set the body using a string setter
-	////mail.Plain().Set("YOU ARE REJECTEDDD")
-	//
-	//// And you're done!
-	//if err := mail.Send(); err != nil {
-	//	panic(" UNABLE TO SEND WITH MAILYAK ")
-	//}
-
-
-
-				//conn, err := smtp.Dial(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
-				//fmt.Println("DIALLING IN TO SMTP ADDRESS")
-				//_, err = net.Dial("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort))
-				//if err != nil {
-				//	fmt.Println("COULD NOT DIAL IN TO SMTP ADDRESS")
-				//	fmt.Println(err)
-				//	return err
-				//}
-				//fmt.Println("SUCCESS DIAL IN TO SMTP ADDRESS")
-					//conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", smtpHost, smtpPort), 10*time.Second)
-					//if err != nil {
-					//	fmt.Println("COULD NOT DIALTIMEOUT IN TO SMTP ADDRESS")
-					//	fmt.Println(err)
-					//}
-					//fmt.Println("SUCCESS DIALTIMEOUT TO SMTP ADDRESS")
-
-					// Connect to the SMTP server
-					//c, err := smtp.NewClient(conn, smtpHost)
-					//if err != nil {
-					//	fmt.Println("FAILED TO CREATE NEW STMP CLIENT")
-					//	fmt.Println(err)
-					//}
-					//defer c.Quit()
-				//} else {
-				//	fmt.Println("SUCCESS DIALLED INTO SMTP ADDRESS")
-				//}
-				//defer conn.Close()
-				//
-				//if err = conn.Mail(from); err != nil {
-				//	return err
-				//}
-				//if err = conn.Rcpt(student.Email); err != nil {
-				//	return err
-				//}
-				//w, err := conn.Data()
-				//if err != nil {
-				//	return err
-				//}
-				//msg := "To: " + strings.Join([]string{student.Email}, ",") + "\r\n" +
-				//	"From: " + from + "\r\n" +
-				//	"Subject: " + "TESTTT" + "\r\n" +
-				//	"Content-Type: text/html; charset=\"UTF-8\"\r\n" +
-				//	"Content-Transfer-Encoding: base64\r\n" +
-				//	"\r\n" + base64.StdEncoding.EncodeToString([]byte(emailBody))
-				//
-				//_, err = w.Write([]byte(msg))
-				//if err != nil {
-				//	return err
-				//}
-				//err = w.Close()
-				//if err != nil {
-				//	return err
-				//}
-				//return conn.Quit()
-
-	//err = u.mailer.SendSimpleMail(student.Email, emailBody)
-	//if err!= nil {
-	//	fmt.Println("FAILED TO SEND MAIL")
-	//	fmt.Println(err)
-	//}
-	return err
+	return u.mailer.SendSimpleMail(student.Email, emailBody)
+	//return err
 }
 
 func createEmailBody(student *domain.Student, team string) ([]byte, error) {
-	fmt.Println("CREATING EMAIL BODY...")
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to retrieve current working directory\n %s", err))
@@ -358,12 +199,10 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.NewInternalServerError(fmt.Sprintf("Unable to find the file\n %s", err))
 	}
-	fmt.Println("FOUND REJECTION HTML!")
 
 	var body bytes.Buffer
-	//fmt.Println("EMAIL FROM: ")
-	//fmt.Println(os.Getenv("EMAIL_FROM"))
-	message := fmt.Sprintf("From: %s\r\n", "soen490airbenders@gmail.com")
+
+	message := fmt.Sprintf("From: %s\r\n", os.Getenv("EMAIL_FROM"))
 	message += fmt.Sprintf("To: %s\r\n", student.Email)
 	message += "Subject: Team Request\r\n"
 	message += "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
@@ -377,6 +216,6 @@ func createEmailBody(student *domain.Student, team string) ([]byte, error) {
 		Name: student.FirstName,
 		Team: team,
 	})
-	fmt.Println("COMPLETED WRITING MESSAGE TO BUFFER")
+
 	return body.Bytes(), nil
 }
