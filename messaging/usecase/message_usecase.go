@@ -174,13 +174,11 @@ func (u *messageUseCase) SendRejection(ctx context.Context, roomID string, userI
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to remove user from room: %s", err.Error()))
 	}
 
-	_, err = createEmailBody(student, roomID)
-	//emailBody, err := createEmailBody(student, roomID)
+	emailBody, err := createEmailBody(student, roomID)
 	if err != nil {
 		return errors.NewInternalServerError(fmt.Sprintf("Unable to create email: %s", err.Error()))
 	}
-	//return u.mailer.SendSimpleMail(student.Email, emailBody)
-	return err
+	return u.mailer.SendSimpleMail(student.Email, emailBody)
 }
 
 func createEmailBody(student *domain.Student, team string) ([]byte, error) {
