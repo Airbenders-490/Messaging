@@ -3,6 +3,7 @@ package app
 import (
 	"chat/messaging/delivery/http"
 	roomHttp "chat/room/delivery/http"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +20,7 @@ func mapChatUrls(mw Middleware, r *gin.Engine, mh *http.MessageHandler) {
 	const pathRoomID = "chat/:roomID"
 	router.POST(pathRoomID, mh.LoadMessages)
 	router.PUT(pathRoomID, mh.EditMessage)
-	router.DELETE(pathRoomID, mh.DeleteMessage)
+	router.DELETE(fmt.Sprintf("%s/:timestamp", pathRoomID), mh.DeleteMessage)
 	router.POST("chat/joinRequest/:roomID", mh.JoinRequest)
 	router.POST("chat/rejectRequest/:roomID/:userID", mh.RejectJoinRequest)
 }

@@ -6,6 +6,7 @@ import (
 	"chat/utils/httputils"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -330,33 +331,25 @@ func (h *MessageHandler) EditMessage(c *gin.Context) {
 }
 
 func (h *MessageHandler) DeleteMessage(c *gin.Context) {
-	room := c.Param("roomID")
-
+	roomID := c.Param("roomID")
+	timestamp := c.Param("timestamp")
+	sentTimestamp, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		fmt.Println(err)
+		errors.SetRESTError(err, c)
+		return
+	}
 	key, _ := c.Get("loggedID")
 	loggedID, _ := key.(string)
-
 	ctx := c.Request.Context()
 
-	var message domain.Message
-	err := c.ShouldBindJSON(&message)
-	if err != nil || message.FromStudentID == "" || message.SentTimestamp.IsZero() {
-		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("invalid request body"))
-		return
-	}
-
-	if loggedID != message.FromStudentID {
-		c.JSON(http.StatusUnauthorized, errors.NewUnauthorizedError("Can only edit your own messages"))
-		return
-	}
-
-	message.RoomID = room
-	err = h.u.DeleteMessage(ctx, message.RoomID, message.SentTimestamp, message.FromStudentID)
+	message, err := h.u.DeleteMessage(ctx, roomID, sentTimestamp, loggedID)
 	if err != nil {
 		errors.SetRESTError(err, c)
 		return
 	}
 
-	mainHub.broadcast <- NewDeleteEvent(message)
+	mainHub.broadcast <- NewDeleteEvent(*message)
 	c.JSON(http.StatusAccepted, httputils.NewResponse("message deleted"))
 }
 

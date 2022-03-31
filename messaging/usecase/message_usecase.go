@@ -101,20 +101,25 @@ func (u *messageUseCase) GetMessages(ctx context.Context, roomID string, timeSta
 	return retrievedMessages, nil
 }
 
-func (u *messageUseCase) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time, userID string) error {
+func (u *messageUseCase) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time, userID string) (*domain.Message, error) {
 	c, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
 	existingMessage, err := u.messageRepository.GetMessage(ctx, roomID, timeStamp)
 	if err != nil {
-		return errors.NewNotFoundError("Message does not exist")
+		return nil, errors.NewNotFoundError("Message does not exist")
 	}
 
 	if userID != existingMessage.FromStudentID {
-		return errors.NewUnauthorizedError("Users can only delete their own messages")
+		return nil, errors.NewUnauthorizedError("Users can only delete their own messages")
 	}
 
-	return u.messageRepository.DeleteMessage(c, roomID, timeStamp)
+	err = u.messageRepository.DeleteMessage(c, roomID, timeStamp)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+
+	return existingMessage, nil
 }
 
 func (u *messageUseCase) JoinRequest(ctx context.Context, roomID string, userID string, timeStamp time.Time) error {
