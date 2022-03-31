@@ -97,7 +97,7 @@ func TestAddUserToRoom(t *testing.T) {
 
 	t.Run("AddUserToRoom Success", func(t *testing.T) {
 		mockRoomUseCase.
-			On("AddUserToRoom", mock.Anything, mock.Anything, mock.Anything).
+			On("AddUserToRoom", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 
@@ -117,7 +117,7 @@ func TestAddUserToRoom(t *testing.T) {
 
 	t.Run("Fail: AddUserToRoom error", func(t *testing.T) {
 		mockRoomUseCase.
-			On("AddUserToRoom", mock.Anything, mock.Anything, mock.Anything).
+			On("AddUserToRoom", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.NewInternalServerError("")).
 			Once()
 
