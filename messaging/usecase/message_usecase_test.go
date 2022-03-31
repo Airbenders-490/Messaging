@@ -207,10 +207,11 @@ func TestDeleteMessage(t *testing.T) {
 			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
 			Return(&mockMessage, nil).Once()
 
-		err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
+		returnedMessage, err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
 
+		mockMessage.MessageBody = ""
 		assert.NoError(t, err)
-
+		assert.EqualValues(t, mockMessage, *returnedMessage)
 		mockMessageRepository.AssertExpectations(t)
 	})
 
@@ -219,9 +220,10 @@ func TestDeleteMessage(t *testing.T) {
 			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
 			Return(nil, errors.New("error")).Once()
 
-		err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
+		msg, err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
 
 		assert.Error(t, err)
+		assert.Nil(t, msg)
 
 		mockMessageRepository.AssertExpectations(t)
 	})
@@ -233,9 +235,10 @@ func TestDeleteMessage(t *testing.T) {
 			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
 			Return(&msg, nil).Once()
 
-		err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
+		message, err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
 
 		assert.Error(t, err)
+		assert.Nil(t, message)
 
 		mockMessageRepository.AssertExpectations(t)
 
@@ -250,9 +253,10 @@ func TestDeleteMessage(t *testing.T) {
 			On("GetMessage", mock.Anything, mock.AnythingOfType("string"), mock.Anything).
 			Return(&mockMessage, nil).Once()
 
-		err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
+		message, err := u.DeleteMessage(context.TODO(), mockMessage.RoomID, mockMessage.SentTimestamp, mockMessage.FromStudentID)
 
 		assert.Error(t, err)
+		assert.Nil(t, message)
 
 		mockMessageRepository.AssertExpectations(t)
 	})
