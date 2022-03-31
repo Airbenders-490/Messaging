@@ -17,17 +17,26 @@ type MessageUseCase struct {
 }
 
 // DeleteMessage provides a mock function with given fields: ctx, roomID, timeStamp, userID
-func (_m *MessageUseCase) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time, userID string) error {
+func (_m *MessageUseCase) DeleteMessage(ctx context.Context, roomID string, timeStamp time.Time, userID string) (*domain.Message, error) {
 	ret := _m.Called(ctx, roomID, timeStamp, userID)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time, string) error); ok {
+	var r0 *domain.Message
+	if rf, ok := ret.Get(0).(func(context.Context, string, time.Time, string) *domain.Message); ok {
 		r0 = rf(ctx, roomID, timeStamp, userID)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.Message)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, time.Time, string) error); ok {
+		r1 = rf(ctx, roomID, timeStamp, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // EditMessage provides a mock function with given fields: ctx, roomID, userID, timeStamp, message

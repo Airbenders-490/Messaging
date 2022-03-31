@@ -346,21 +346,19 @@ func TestDeleteMessage(t *testing.T) {
 	mw := new(mocks.MiddlewareMock)
 	r := app.Server(mh, nil, mw)
 
+	deleteEndpoint := "/api/chat/%s/%s"
 	var deletedMessage domain.Message
 	err := faker.FakeData(&deletedMessage)
 	assert.NoError(t, err)
 	mainHub := http.NewHub()
 	go mainHub.StartHubListener()
 	t.Run("success", func(t *testing.T) {
-		putBody, err := json.Marshal(deletedMessage)
-		assert.NoError(t, err)
 		mockUseCase.On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"),
 			mock.Anything, mock.AnythingOfType("string")).
-			Return(nil).Once()
-
-		reader := strings.NewReader(string(putBody))
-		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(putChatPath,
-			deletedMessage.RoomID), reader)
+			Return(&deletedMessage, nil).Once()
+		fmt.Println(deletedMessage)
+		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(deleteEndpoint,
+			deletedMessage.RoomID, "2022-03-27T00:05:25.005Z"), nil)
 
 		reqFound.Header.Set("id", deletedMessage.FromStudentID)
 		w := httptest.NewRecorder()
@@ -370,9 +368,12 @@ func TestDeleteMessage(t *testing.T) {
 	})
 
 	t.Run(invalidDataMessage, func(t *testing.T) {
-		//var mockMessage domain.Message
-		reader := strings.NewReader(invalidBodyMessage)
-		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(putChatPath, deletedMessage.RoomID), reader)
+		restErr := errors.NewBadRequestError(errorOccurredMessage)
+		mockUseCase.On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"),
+			mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, restErr).Once()
+		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(deleteEndpoint,
+			deletedMessage.RoomID, "2022-03-27T00:05:25.005Z"), nil)
 
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, reqFound)
@@ -381,12 +382,12 @@ func TestDeleteMessage(t *testing.T) {
 	})
 
 	t.Run("unauthorized user", func(t *testing.T) {
-		putBody, err := json.Marshal(deletedMessage)
-		assert.NoError(t, err)
-
-		reader := strings.NewReader(string(putBody))
-		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(putChatPath,
-			deletedMessage.RoomID), reader)
+		restErr := errors.NewUnauthorizedError(errorOccurredMessage)
+		mockUseCase.On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"),
+			mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, restErr).Once()
+		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(deleteEndpoint,
+			deletedMessage.RoomID, "2022-03-27T00:05:25.005Z"), nil)
 
 		reqFound.Header.Set("id", "avc")
 		w := httptest.NewRecorder()
@@ -396,15 +397,13 @@ func TestDeleteMessage(t *testing.T) {
 	})
 
 	t.Run(restError, func(t *testing.T) {
-		putBody, err := json.Marshal(deletedMessage)
-		assert.NoError(t, err)
 		restErr := errors.NewConflictError(errorOccurredMessage)
 		mockUseCase.On("DeleteMessage", mock.Anything, mock.AnythingOfType("string"),
-			mock.Anything, mock.AnythingOfType("string")).Return(restErr).Once()
+			mock.Anything, mock.AnythingOfType("string")).
+			Return(nil, restErr).Once()
 
-		reader := strings.NewReader(string(putBody))
-		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(putChatPath,
-			deletedMessage.RoomID), reader)
+		reqFound := httptest.NewRequest("DELETE", fmt.Sprintf(deleteEndpoint,
+			deletedMessage.RoomID, "2022-03-27T00:05:25.005Z"), nil)
 
 		reqFound.Header.Set("id", deletedMessage.FromStudentID)
 		w := httptest.NewRecorder()
