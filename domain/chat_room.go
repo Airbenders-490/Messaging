@@ -53,7 +53,7 @@ type RoomRepository interface {
 type RoomUseCase interface {
 	// SaveRoom needs to save not just the room, but also add the chatroom for all the students
 	SaveRoom(ctx context.Context, room *ChatRoom) error
-	AddUserToRoom(ctx context.Context, roomID string, userID string) error
+	AddUserToRoom(ctx context.Context, roomID string, userID string, loggedID string) error
 	RemoveUserFromRoom(ctx context.Context, roomID string, userID string, loggedID string) error
 	GetChatRoomsByClass(ctx context.Context, className string) ([]ChatRoom, error)
 	GetChatRoomsFor(ctx context.Context, userID string) (*StudentChatRooms, error)

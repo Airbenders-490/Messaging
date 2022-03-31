@@ -44,11 +44,13 @@ func (h *RoomHandler) SaveRoom(c *gin.Context) {
 }
 
 func (h *RoomHandler) AddUserToRoom(c *gin.Context) {
+	key, _ := c.Get("loggedID")
+	loggedID, _ := key.(string)
 	userID := c.Params.ByName("id")
 	roomID := c.Params.ByName("roomID")
 
 	ctx := c.Request.Context()
-	err := h.u.AddUserToRoom(ctx, roomID, userID)
+	err := h.u.AddUserToRoom(ctx, roomID, userID, loggedID)
 	if err != nil {
 		errors.SetRESTError(err, c)
 		return

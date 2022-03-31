@@ -103,26 +103,55 @@ func TestSaveRoom(t *testing.T) {
 }
 
 func TestAddUserToRoom(t *testing.T) {
+	loggedID := ""
 
 	t.Run(caseSuccess, func(t *testing.T) {
+		room := &domain.ChatRoom{RoomID: "", MaxParticipants: 2, Admin: domain.Student{ID: loggedID}, Students: []domain.Student{{ID: "1", IsPending: false}}}
 		resetRoomUsecaseTestFields()
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(room, nil).
+			Once()
 		mockRoomRepo.On("AddParticipantToRoomAndAddRoomForParticipant", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
 			Return(nil).Once()
 		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
-		err := u.AddUserToRoom(context.TODO(), mockRoom.RoomID, mockStudent.ID)
+		err := u.AddUserToRoom(context.TODO(), room.RoomID, mockStudent.ID, loggedID)
 		assert.NoError(t, err)
 		mockRoomRepo.AssertExpectations(t)
 
 	})
-	t.Run(caseErrorInRepo, func(t *testing.T) {
+	t.Run("error: get room", func(t *testing.T) {
 		resetRoomUsecaseTestFields()
-		mockRoomRepo.On("AddParticipantToRoomAndAddRoomForParticipant", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).
-			Return(errors.New("error")).Once()
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(nil, errors.New("")).
+			Once()
 		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
-		err := u.AddUserToRoom(context.TODO(), mockRoom.RoomID, mockStudent.ID)
+		err := u.AddUserToRoom(context.TODO(), mockRoom.RoomID, mockStudent.ID, loggedID)
 		assert.Error(t, err)
 		mockRoomRepo.AssertExpectations(t)
 	})
+	t.Run("error: not admin", func(t *testing.T) {
+		room := &domain.ChatRoom{RoomID: "", MaxParticipants: 2, Admin: domain.Student{ID: "not admin"}, Students: []domain.Student{{ID: "1", IsPending: false}}}
+		resetRoomUsecaseTestFields()
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(room, nil).
+			Once()
+		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
+		err := u.AddUserToRoom(context.TODO(), room.RoomID, mockStudent.ID, loggedID)
+		assert.Error(t, err)
+		mockRoomRepo.AssertExpectations(t)
+	})
+	t.Run("error: full capacity", func(t *testing.T) {
+		room := &domain.ChatRoom{RoomID: "", MaxParticipants: 1, Admin: domain.Student{ID: ""}, Students: []domain.Student{{ID: "1", IsPending: false}}}
+		resetRoomUsecaseTestFields()
+		mockRoomRepo.On("GetRoom", mock.Anything, mock.Anything).
+			Return(room, nil).
+			Once()
+		u := NewRoomUseCase(mockRoomRepo, mockStudentRepo, time.Second)
+		err := u.AddUserToRoom(context.TODO(), room.RoomID, mockStudent.ID, loggedID)
+		assert.Error(t, err)
+		mockRoomRepo.AssertExpectations(t)
+	})
+
 }
 
 func TestRemoveUserFromRoom(t *testing.T) {

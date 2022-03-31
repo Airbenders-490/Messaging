@@ -56,11 +56,30 @@ func (u *roomUseCase) SaveRoom(ctx context.Context, room *domain.ChatRoom) error
 }
 
 // AddUserToRoom should add user to room in chat.room and add room to student in chat.student_rooms
-func (u *roomUseCase) AddUserToRoom(ctx context.Context, roomID string, userID string) error {
+func (u *roomUseCase) AddUserToRoom(ctx context.Context, roomID string, userID string, loggedID string) error {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
 
-	return u.rr.AddParticipantToRoomAndAddRoomForParticipant(ctx, roomID, userID)
+	room, err := u.rr.GetRoom(ctx, roomID)
+	if err != nil {
+		return errors.NewConflictError(fmt.Sprintf("Room with ID %s does not exist", roomID))
+	}
+
+	if room.Admin.ID != loggedID {
+		return errors.NewUnauthorizedError("Unauthorized, you cannot add a user unless you are the admin")
+	}
+
+	isPendingFalseCount := 0
+	for _, student := range room.Students {
+		if (!student.IsPending) {
+			isPendingFalseCount++
+		}
+	}
+
+	if isPendingFalseCount < room.MaxParticipants {
+		return u.rr.AddParticipantToRoomAndAddRoomForParticipant(ctx, roomID, userID)
+	}
+	return errors.NewConflictError("Room is full")
 }
 
 // RemoveUserFromRoom should remove user from room in chat.room and remove room from user in chat.student_rooms
