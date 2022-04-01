@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"github.com/streadway/amqp"
+)
 
 // Student struct
 type Student struct {
@@ -22,7 +25,7 @@ type StudentRepository interface {
 // StudentUseCase implements the contract for student functionalities. GetStudent is used by the app, but
 // ListenAndSyncStudentRecord is used to sync the data from the profile service
 type StudentUseCase interface {
-	ListenStudentCreation()
-	ListenStudentEdit()
-	ListenStudentDelete()
+	ListenStudentCreation(channel *amqp.Channel)
+	ListenStudentEdit(channel *amqp.Channel)
+	ListenStudentDelete(channel *amqp.Channel)
 }

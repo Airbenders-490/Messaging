@@ -13,6 +13,7 @@ import (
 	"chat/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
+	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"time"
@@ -23,6 +24,12 @@ func Server(mh *http.MessageHandler, rh *http2.RoomHandler, mw Middleware) *gin.
 	mapChatUrls(mw, router, mh)
 	mapRoomURLs(mw, router, rh)
 	return router
+}
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
 }
 
 // Start runs the server
@@ -48,9 +55,28 @@ func Start() {
 
 	su := studentUseCase.NewStudentUseCase(*sr)
 
-	go su.ListenStudentCreation()
-	go su.ListenStudentEdit()
-	go su.ListenStudentDelete()
+	conn, err := amqp.Dial(os.Getenv("RABBIT_URL"))
+	failOnError(err, "Failed to connect to RabbitMQ")
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	failOnError(err, "Failed to open a channel")
+	defer ch.Close()
+
+	err = ch.ExchangeDeclare(
+		"profile", // name
+		"topic",   // type
+		true,      // durable
+		false,     // auto-deleted
+		false,     // internal
+		false,     // no-wait
+		nil,       // arguments
+	)
+	failOnError(err, "Failed to declare an exchange")
+
+	go su.ListenStudentCreation(ch)
+	go su.ListenStudentEdit(ch)
+	go su.ListenStudentDelete(ch)
 
 	mw := NewMiddleware()
 
