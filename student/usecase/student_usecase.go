@@ -30,36 +30,8 @@ func failOnError(err error, msg string) {
 }
 
 func (s studentUseCase) ListenStudentCreation(ch *amqp.Channel) {
-	q, err := ch.QueueDeclare(
-		"",    // name
-		false, // durable
-		false, // delete when unused
-		true,  // exclusive
-		false, // no-wait
-		nil,   // arguments
-	)
-	failOnError(err, failQueue)
+	err, msgs, forever := s.QueueListener(ch, "created")
 
-	err = ch.QueueBind(
-		q.Name,            // queue name
-		"profile.created", // routing key
-		"profile",         // exchange
-		false,
-		nil)
-	failOnError(err, failedBindQueue)
-
-	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,  // auto ack
-		false,  // exclusive
-		false,  // no local
-		false,  // no wait
-		nil,    // args
-	)
-	failOnError(err, failedToRegisterConsumer)
-
-	forever := make(chan bool)
 	go func() {
 		for d := range msgs {
 			var st domain.Student
@@ -78,39 +50,10 @@ func (s studentUseCase) ListenStudentCreation(ch *amqp.Channel) {
 	<-forever
 }
 
-
 // ListenStudentEdit listens to the
 func (s studentUseCase) ListenStudentEdit(ch *amqp.Channel) {
-	q, err := ch.QueueDeclare(
-		"",    // name
-		false, // durable
-		false, // delete when unused
-		true,  // exclusive
-		false, // no-wait
-		nil,   // arguments
-	)
-	failOnError(err, failQueue)
+	err, msgs, forever := s.QueueListener(ch, "updated")
 
-	err = ch.QueueBind(
-		q.Name,            // queue name
-		"profile.edited", // routing key
-		"profile",         // exchange
-		false,
-		nil)
-	failOnError(err, failedBindQueue)
-
-	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,  // auto ack
-		false,  // exclusive
-		false,  // no local
-		false,  // no wait
-		nil,    // args
-	)
-	failOnError(err, failedToRegisterConsumer)
-
-	forever := make(chan bool)
 	go func() {
 		for d := range msgs {
 			var st domain.Student
@@ -131,6 +74,26 @@ func (s studentUseCase) ListenStudentEdit(ch *amqp.Channel) {
 
 // ListenStudentDelete listens to the queue for any deleted students
 func (s studentUseCase) ListenStudentDelete(ch *amqp.Channel) {
+	err, msgs, forever := s.QueueListener(ch, "deleted")
+
+	go func() {
+		for d := range msgs {
+			id := string(d.Body)
+			err = s.sr.DeleteStudent(context.Background(), id)
+			if err != nil {
+				log.Println("couldn't delete student ", err)
+				continue
+			}
+			d.Ack(false)
+			log.Println("deleted a student")
+		}
+	}()
+
+	log.Printf(" [*] Waiting for delete")
+	<-forever
+}
+
+func (s studentUseCase) QueueListener(ch *amqp.Channel, operation string) (error, <-chan amqp.Delivery, chan bool) {
 	q, err := ch.QueueDeclare(
 		"",    // name
 		false, // durable
@@ -143,7 +106,7 @@ func (s studentUseCase) ListenStudentDelete(ch *amqp.Channel) {
 
 	err = ch.QueueBind(
 		q.Name,            // queue name
-		"profile.deleted", // routing key
+		"profile."+operation, // routing key
 		"profile",         // exchange
 		false,
 		nil)
@@ -161,20 +124,5 @@ func (s studentUseCase) ListenStudentDelete(ch *amqp.Channel) {
 	failOnError(err, failedToRegisterConsumer)
 
 	forever := make(chan bool)
-
-	go func() {
-		for d := range msgs {
-			id := string(d.Body)
-			err = s.sr.DeleteStudent(context.Background(), id)
-			if err != nil {
-				log.Println("couldn't delete student ", err)
-				continue
-			}
-			d.Ack(false)
-			log.Println("deleted a student")
-		}
-	}()
-
-	log.Printf(" [*] Waiting for delete")
-	<-forever
+	return err, msgs, forever
 }
